@@ -8,7 +8,7 @@
 import SwiftUI
 
 /// `EditExpenseView` is a SwiftUI view that allows users to edit an existing expense.
-/// It provides a form with input fields for the expense's name, note, amount, type, and date.
+/// It provides a form with input fields for the expense's name, note, amount, category, and date.
 /// The view allows users to update or delete the expense and shows alerts for errors or delete confirmation.
 struct EditExpenseView: View {
     
@@ -17,23 +17,6 @@ struct EditExpenseView: View {
     
     /// The view model for handling data-related operations.
     @State private var viewModel: ViewModel
-    
-    /// Boolean flags for displaying error and delete confirmation alerts.
-    @State private var showError: Bool = false
-    @State private var showDeleteConfirmation: Bool = false
-    
-    /// State properties for storing the edited expense values.
-    @State private var amount: Double
-    @State private var expenseType: ExpenseType
-    @State private var date: Date
-    @State private var name: String
-    @State private var note: String
-    
-    /// Error message to display in case of an error.
-    @State private var errorMessage: String = ""
-    
-    /// The expense to be edited.
-    let expense: Expense
     
     /// Closure that is executed when the expense is successfully updated.
     var onUpdate: () -> Void
@@ -44,14 +27,8 @@ struct EditExpenseView: View {
     ///   - databaseManager: The database manager responsible for performing data operations.
     ///   - onUpdate: A closure to call when the expense is successfully updated.
     init(expense: Expense, databaseManager: DatabaseQueryType, onUpdate: @escaping () -> Void) {
-        self.expense = expense
-        self.viewModel = .init(databaseManager: databaseManager)
+        self.viewModel = .init(expense: expense, databaseManager: databaseManager)
         self.onUpdate = onUpdate
-        _amount = State(initialValue: expense.amount)
-        _expenseType = State(initialValue: expense.type)
-        _date = State(initialValue: expense.date)
-        _name = State(initialValue: expense.name)
-        _note = State(initialValue: expense.note)
     }
     
     /// The body of the view, containing a form with input fields for the expense details and action buttons.
@@ -62,7 +39,7 @@ struct EditExpenseView: View {
                 HStack {
                     Text("Name")
                     Spacer()
-                    TextField("Lunch, Dinner, etc.", text: $name)
+                    TextField("Lunch, Dinner, etc.", text: $viewModel.name)
                         .multilineTextAlignment(.trailing)
                 }
                 
@@ -70,7 +47,7 @@ struct EditExpenseView: View {
                 HStack {
                     Text("Note")
                     Spacer()
-                    TextField("Note", text: $note)
+                    TextField("Note", text: $viewModel.note)
                         .multilineTextAlignment(.trailing)
                 }
                 
@@ -78,30 +55,30 @@ struct EditExpenseView: View {
                 HStack {
                     Text("Amount")
                     Spacer()
-                    TextField("Amount", value: $amount, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
+                    TextField("Amount", value: $viewModel.amount, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
                         .keyboardType(.decimalPad)
                         .multilineTextAlignment(.trailing)
                 }
                 
-                // Expense type picker
+                // Expense category picker
                 HStack {
-                    Text("Expense Type")
+                    Text("Category")
                     Spacer()
-                    Picker("Expense Type", selection: $expenseType) {
-                        ForEach(ExpenseType.allCases, id: \.self) { type in
-                            Text(type.rawValue)
+                    Picker("Category", selection: $viewModel.category) {
+                        ForEach(Category.allCases, id: \.self) { category in
+                            Text(category.rawValue)
                         }
                     }
                     .labelsHidden()
                 }
                 
                 // Date picker
-                DatePicker("Date", selection: $date, displayedComponents: .date)
+                DatePicker("Date", selection: $viewModel.date, displayedComponents: .date)
                 
                 // Delete button
                 Section {
                     Button {
-                        showDeleteConfirmation.toggle()
+                        viewModel.showDeleteConfirmation.toggle()
                     } label: {
                         HStack(alignment: .center) {
                             Text("Delete")
@@ -118,7 +95,7 @@ struct EditExpenseView: View {
                 // Update button
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Update", action: updateExpense)
-                        .disabled(name.isEmpty || amount == 0)
+                        .disabled(viewModel.name.isEmpty || viewModel.amount == 0)
                 }
                 
                 // Cancel button
@@ -128,12 +105,12 @@ struct EditExpenseView: View {
                     }
                 }
             }
-            .alert("Error", isPresented: $showError) {
+            .alert("Error", isPresented: $viewModel.showError) {
                 Button("OK") { }
             } message: {
-                Text(errorMessage)
+                Text(viewModel.errorMessage)
             }
-            .alert("Delete", isPresented: $showDeleteConfirmation) {
+            .alert("Delete", isPresented: $viewModel.showDeleteConfirmation) {
                 Button("Cancel", role: .cancel) { }
                 Button("Delete", role: .destructive, action: deleteExpense)
             } message: {
@@ -145,14 +122,10 @@ struct EditExpenseView: View {
     /// Updates the expense with the new values from the form.
     /// This method calls the view model to perform the update in the database and triggers the `onUpdate` closure on success.
     func updateExpense() {
-        viewModel.updateExpense(id: expense.id, name: name, amount: amount, date: date.formattedString(), type: expenseType.rawValue, note: note) { result in
-            switch result {
-            case .success:
+        viewModel.updateExpense { success in
+            if success {
                 onUpdate()
                 dismiss()
-            case .failure(let error):
-                showError.toggle()
-                errorMessage = error.localizedDescription
             }
         }
     }
@@ -160,19 +133,15 @@ struct EditExpenseView: View {
     /// Deletes the expense.
     /// This method calls the view model to perform the delete operation and dismisses the view on success.
     func deleteExpense() {
-        viewModel.deleteExpense(id: expense.id) { result in
-            switch result {
-            case .success:
+        viewModel.deleteExpense { success in
+            if success {
+                onUpdate()
                 dismiss()
-            case .failure(let error):
-                showError.toggle()
-                errorMessage = error.localizedDescription
             }
         }
     }
 }
 
 #Preview {
-    let expense: Expense = .init(id: UUID().uuidString, name: "Test", amount: 100.0, date: Date(), type: .food, note: "")
-    EditExpenseView(expense: expense, databaseManager: DatabaseManager(databaseHandler: DatabaseHandlerImpl())) { }
+    EditExpenseView(expense: .sample, databaseManager: DatabaseManager(databaseHandler: DatabaseHandlerImpl())) { }
 }

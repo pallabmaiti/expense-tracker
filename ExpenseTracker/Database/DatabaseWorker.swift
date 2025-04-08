@@ -43,7 +43,7 @@ enum Month: Int, CaseIterable {
     case november = 11
     /// Represents the month of December (12).
     case december = 12
-
+    
     /// Returns the full name of the month as a string.
     ///
     /// Example usage:
@@ -96,46 +96,21 @@ class DatabaseWorker {
         self.database = datebase
     }
     
-    /// Fetches all expense data from the database and structures it in a year-wise and month-wise format.
+    /// Fetches all expense data from the database.
     ///
-    /// - Returns: A dictionary containing the expense data structured by year and month.
-    func fetchExpenseData() -> [String: Any] {
-        let storedExpenses = database.expenses
+    /// - Returns: A dictionary containing the expense data.
+    func fetchExpenses() -> [String: Any] {
         var data = [[String: Any]]()
         
-        // Iterates through years from 2999 to 2000 (reversed order)
-        for i in (2000...2999).reversed() {
-            let filteredStoredExpenses = storedExpenses.filter { $0.year == i }
-            guard !filteredStoredExpenses.isEmpty else { continue }
-            
-            var expenses = [String: [[String: Any]]]()
-            
-            // Iterates through all months to structure expenses by month
-            for month in Month.allCases {
-                let storedExpensesForMonth = filteredStoredExpenses.filter { $0.month == month.rawValue }
-                if !storedExpensesForMonth.isEmpty {
-                    let expensesForMonth: [[String: Any]] = storedExpensesForMonth.map {
-                        [
-                            "id": $0.id,
-                            "name": $0.name,
-                            "amount": $0.amount,
-                            "date": $0.date,
-                            "type": $0.type,
-                            "note": $0.note
-                        ]
-                    }
-                    expenses[month.name.lowercased()] = expensesForMonth
-                } else {
-                    expenses[month.name.lowercased()] = []
-                }
-            }
-            
-            let expenseData = [
-                "year": i,
-                "expenses": expenses
-            ] as [String: Any]
-            
-            data.append(expenseData)
+        database.expenses.forEach {
+            data.append([
+                "id": $0.id,
+                "name": $0.name,
+                "amount": $0.amount,
+                "date": $0.date,
+                "category": $0.category,
+                "note": $0.note
+            ])
         }
         
         return ["data": data]
@@ -147,12 +122,11 @@ class DatabaseWorker {
     ///   - name: The name or description of the expense.
     ///   - amount: The amount of money spent.
     ///   - date: The date of the expense in `yyyy-MM-dd` format.
-    ///   - type: The category or type of the expense.
+    ///   - category: The category of the expense.
     ///   - note: Additional notes about the expense.
-    /// - Throws: An error if the expense data is invalid.
     /// - Returns: A dictionary confirming the operation success.
-    func saveExpense(name: String, amount: Double, date: String, type: String, note: String) throws -> [String: Any] {
-        let databaseExpense: DatabaseExpense = try .init(name: name, amount: amount, date: date, type: type, note: note)
+    func saveExpense(name: String, amount: Double, date: String, category: String, note: String) -> [String: Any] {
+        let databaseExpense: DatabaseExpense = .init(name: name, amount: amount, date: date, category: category, note: note)
         database.addExpense(databaseExpense)
         return ["data": true]
     }
@@ -177,15 +151,15 @@ class DatabaseWorker {
     ///   - name: The updated name or description of the expense.
     ///   - amount: The updated amount spent.
     ///   - date: The updated date of the expense in `yyyy-MM-dd` format.
-    ///   - type: The updated category or type of the expense.
+    ///   - category: The updated category of the expense.
     ///   - note: The updated details about the expense.
     /// - Throws: `ExpenseTrackerError.dataNotFound` if the expense does not exist.
     /// - Returns: A dictionary confirming the update.
-    func updateExpense(id: String, name: String, amount: Double, date: String, type: String, note: String) throws -> [String: Any] {
+    func updateExpense(id: String, name: String, amount: Double, date: String, category: String, note: String) throws -> [String: Any] {
         guard let index = database.expenses.firstIndex(where: { $0.id == id }) else {
             throw ExpenseTrackerError.dataNotFound
         }
-        let newExpense: DatabaseExpense = try .init(id: id, name: name, amount: amount, date: date, type: type, note: note)
+        let newExpense: DatabaseExpense = .init(id: id, name: name, amount: amount, date: date, category: category, note: note)
         database.updateExpense(at: index, with: newExpense)
         return ["data": true]
     }
@@ -195,6 +169,72 @@ class DatabaseWorker {
     /// - Returns: A dictionary confirming the deletion of all expenses.
     func deleteAllExpenses() -> [String: Any] {
         database.clearExpenses()
+        return ["data": true]
+    }
+    
+    /// Fetches all income data from the database.
+    ///
+    /// - Returns: A dictionary containing the income data.
+    func fetchIncomes() -> [String: Any] {
+        var data = [[String: Any]]()
+        
+        database.incomes.forEach {
+            data.append([
+                "id": $0.id,
+                "amount": $0.amount,
+                "date": $0.date,
+                "source": $0.source,
+            ])
+        }
+        
+        return ["data": data]
+    }
+    
+    /// Saves a new income entry to the database.
+    /// - Parameters:
+    ///   - amount: The amount of the income.
+    ///   - date: The date of the income in `String` format.
+    ///   - source: The source of income (e.g., Salary, Business, etc.).
+    /// - Returns: A dictionary indicating the success of the operation.
+    func saveIncome(amount: Double, date: String, source: String) -> [String: Any] {
+        let newIncome: DatabaseIncome = .init(amount: amount, date: date, source: source)
+        database.addIncome(newIncome)
+        return ["data": true]
+    }
+    
+    /// Updates an existing income entry in the database.
+    /// - Parameters:
+    ///   - id: The unique identifier of the income to update.
+    ///   - amount: The new income amount.
+    ///   - date: The new income date.
+    ///   - note: The updated source of income.
+    /// - Throws: `ExpenseTrackerError.dataNotFound` if the income ID does not exist.
+    /// - Returns: A dictionary indicating the success of the operation.
+    func updateIncome(id: String, amount: Double, date: String, source: String) throws -> [String: Any] {
+        guard let index = database.incomes.firstIndex(where: { $0.id == id }) else {
+            throw ExpenseTrackerError.dataNotFound
+        }
+        let newIncome: DatabaseIncome = .init(id: id, amount: amount, date: date, source: source)
+        database.updateIncome(at: index, with: newIncome)
+        return ["data": true]
+    }
+    
+    /// Deletes an income entry from the database.
+    /// - Parameter id: The unique identifier of the income to delete.
+    /// - Throws: `ExpenseTrackerError.dataNotFound` if the income ID does not exist.
+    /// - Returns: A dictionary indicating the success of the operation.
+    func deleteIncome(id: String) throws -> [String: Any] {
+        guard let index = database.incomes.firstIndex(where: { $0.id == id }) else {
+            throw ExpenseTrackerError.dataNotFound
+        }
+        database.deleteIncome(at: index)
+        return ["data": true]
+    }
+    
+    /// Deletes all income entries from the database.
+    /// - Returns: A dictionary indicating the success of the operation.
+    func deleteAllIncomes() -> [String: Any] {
+        database.clearIncomes()
         return ["data": true]
     }
 }

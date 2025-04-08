@@ -37,16 +37,16 @@ class DatabaseHandlerImpl: DatabaseHandler {
         switch databaseQuery {
         case .getExpenses:
             do {
-                let expenses = databaseWorker.fetchExpenseData()
+                let expenses = databaseWorker.fetchExpenses()
                 let jsonData = try JSONSerialization.data(withJSONObject: expenses, options: [])
                 completion(.success(jsonData))
             } catch {
                 completion(.failure(error))
             }
             
-        case let .addExpense(name, amount, date, type, note):
+        case let .addExpense(name, amount, date, category, note):
             do {
-                let result = try databaseWorker.saveExpense(name: name, amount: amount, date: date, type: type, note: note)
+                let result = databaseWorker.saveExpense(name: name, amount: amount, date: date, category: category, note: note)
                 let jsonData = try JSONSerialization.data(withJSONObject: result, options: [])
                 completion(.success(jsonData))
             } catch {
@@ -62,9 +62,9 @@ class DatabaseHandlerImpl: DatabaseHandler {
                 completion(.failure(error))
             }
             
-        case let .updateExpense(id, name, amount, date, type, note):
+        case let .updateExpense(id, name, amount, date, category, note):
             do {
-                let result = try databaseWorker.updateExpense(id: id, name: name, amount: amount, date: date, type: type, note: note)
+                let result = try databaseWorker.updateExpense(id: id, name: name, amount: amount, date: date, category: category, note: note)
                 let jsonData = try JSONSerialization.data(withJSONObject: result, options: [])
                 completion(.success(jsonData))
             } catch {
@@ -73,6 +73,51 @@ class DatabaseHandlerImpl: DatabaseHandler {
             
         case .deleteAllExpenses:
             let result = databaseWorker.deleteAllExpenses()
+            do {
+                let jsonData = try JSONSerialization.data(withJSONObject: result, options: [])
+                completion(.success(jsonData))
+            } catch {
+                completion(.failure(error))
+            }
+            
+        case .getIncomes:
+            do {
+                let expenses = databaseWorker.fetchIncomes()
+                let jsonData = try JSONSerialization.data(withJSONObject: expenses, options: [])
+                completion(.success(jsonData))
+            } catch {
+                completion(.failure(error))
+            }
+            
+        case let .addIncome(amount, date, source):
+            do {
+                let result = databaseWorker.saveIncome(amount: amount, date: date, source: source)
+                let jsonData = try JSONSerialization.data(withJSONObject: result, options: [])
+                completion(.success(jsonData))
+            } catch {
+                completion(.failure(error))
+            }
+        
+        case let .updateIncome(id, amount, date, source):
+            do {
+                let result = try databaseWorker.updateIncome(id: id, amount: amount, date: date, source: source)
+                let jsonData = try JSONSerialization.data(withJSONObject: result, options: [])
+                completion(.success(jsonData))
+            } catch {
+                completion(.failure(error))
+            }
+            
+        case let .deleteIncome(id):
+            do {
+                let result = try databaseWorker.deleteIncome(id: id)
+                let jsonData = try JSONSerialization.data(withJSONObject: result, options: [])
+                completion(.success(jsonData))
+            } catch {
+                completion(.failure(error))
+            }
+            
+        case .deleteAllIncome:
+            let result = databaseWorker.deleteAllIncomes()
             do {
                 let jsonData = try JSONSerialization.data(withJSONObject: result, options: [])
                 completion(.success(jsonData))

@@ -31,7 +31,7 @@ struct SplashScreenView: View {
         // If the splash screen is not active, show the splash screen with logo and app name.
         if isActive {
             // Transition to the main content view once the splash screen is done.
-            ExpenseListView(databaseManager: DatabaseManager(databaseHandler: DatabaseHandlerImpl()))
+            ContentView()
         } else {
             ZStack {
                 // Set background color based on color scheme (dark or light mode).

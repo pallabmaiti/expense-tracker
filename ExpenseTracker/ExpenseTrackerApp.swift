@@ -6,13 +6,29 @@
 //
 
 import SwiftUI
-import ProgressHUD
 
+/// The main entry point of the Expense Tracker application.
+///
+/// This struct conforms to the `App` protocol, which defines the structure and behavior
+/// of the app. The `@main` attribute indicates that this is the starting point.
 @main
 struct ExpenseTrackerApp: App {
+    
+    /// An instance of `TabManager` that tracks the selected tab index throughout the app.
+    ///
+    /// It's marked with `@State` to maintain its lifecycle and ensure it stays alive across view updates.
+    /// It's injected into the environment so any view in the app hierarchy can access and modify it.
+    @State private var tabManager = TabManager()
+    
+    /// The body that defines the scene (UI container) for the app.
+    ///
+    /// - `WindowGroup` creates a scene that presents a window for the app’s content.
+    /// - `SplashScreenView` is the initial view shown when the app launches.
+    /// - `.environmentObject(tabManager)` injects the `TabManager` into the view hierarchy.
     var body: some Scene {
         WindowGroup {
             SplashScreenView()
+                .environmentObject(tabManager)
         }
     }
 }
