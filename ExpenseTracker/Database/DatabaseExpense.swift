@@ -58,7 +58,7 @@ struct DatabaseExpense: Codable {
 
 extension DatabaseExpense {
     static var sample1: DatabaseExpense {
-        .init(name: "Milk", amount: 21.50, date: "2025-04-01", category: "Food", note: "1 litre")
+        .init(name: "Groceries", amount: 2100.50, date: "2025-04-01", category: "Food", note: "1 litre")
     }
     static var sample2: DatabaseExpense {
         .init(name: "Movie", amount: 1000.50, date: "2025-04-05", category: "Entertainment", note: "1 loaf")

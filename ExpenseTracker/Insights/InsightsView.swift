@@ -95,7 +95,7 @@ struct ChartView: View {
                     Circle()
                         .fill(item.color)
                         .frame(width: 12, height: 12)
-                    Text("\(item.type): ₹\(Int(item.amount))")
+                    Text("\(item.type): \(Locale.current.currencySymbol ?? "$")\(Int(item.amount))")
                         .font(.subheadline)
                 }
             }

@@ -10,7 +10,7 @@ import SwiftUI
 /// A view that represents the splash screen of the application.
 ///
 /// This view is displayed initially when the app launches. It shows a logo and the app's name ("Expense Tracker"),
-/// with a fade-out animation before transitioning to the main content view (i.e., `ExpenseListView`).
+/// with a fade-out animation before transitioning to the main content view (i.e., `ContentView`).
 /// The splash screen lasts for 1 second before transitioning to the main screen.
 ///
 /// - **Appearance**:
@@ -43,14 +43,13 @@ struct SplashScreenView: View {
                     Image("logo")
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 300, height: 300)
+                        .frame(width: 100, height: 100)
                         .opacity(isActive ? 0 : 1)  // Fades out when isActive becomes true.
                         .animation(.easeInOut(duration: 0.5), value: isActive)  // Animation duration: 0.5 seconds.
-                    
                     // App title text.
                     Text("Expense Tracker")
-                        .font(.largeTitle.bold())  // Large, bold font for the app name.
-                        .foregroundStyle(.red1)  // Custom text color.
+                        .font(.title.bold())  // Large, bold font for the app name.
+                        .foregroundStyle(colorScheme == .dark ? .white : .green1)  // Custom text color.
                 }
             }
             .onAppear {
@@ -66,4 +65,5 @@ struct SplashScreenView: View {
 
 #Preview {
     SplashScreenView()
+        .environmentObject(TabManager())
 }
