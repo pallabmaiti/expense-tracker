@@ -137,10 +137,10 @@ class DatabaseWorker {
     /// - Throws: `ExpenseTrackerError.dataNotFound` if the expense does not exist.
     /// - Returns: A dictionary confirming the deletion.
     func deleteExpense(id: String) throws -> [String: Any] {
-        guard let index = database.expenses.firstIndex(where: { $0.id == id }) else {
+        guard let _ = database.expenses.firstIndex(where: { $0.id == id }) else {
             throw ExpenseTrackerError.dataNotFound
         }
-        database.deleteExpense(at: index)
+        database.deleteExpense(id)
         return ["data": true]
     }
     
@@ -156,11 +156,11 @@ class DatabaseWorker {
     /// - Throws: `ExpenseTrackerError.dataNotFound` if the expense does not exist.
     /// - Returns: A dictionary confirming the update.
     func updateExpense(id: String, name: String, amount: Double, date: String, category: String, note: String) throws -> [String: Any] {
-        guard let index = database.expenses.firstIndex(where: { $0.id == id }) else {
+        guard let _ = database.expenses.firstIndex(where: { $0.id == id }) else {
             throw ExpenseTrackerError.dataNotFound
         }
         let newExpense: DatabaseExpense = .init(id: id, name: name, amount: amount, date: date, category: category, note: note)
-        database.updateExpense(at: index, with: newExpense)
+        database.updateExpense(for: id, with: newExpense)
         return ["data": true]
     }
     
@@ -211,11 +211,11 @@ class DatabaseWorker {
     /// - Throws: `ExpenseTrackerError.dataNotFound` if the income ID does not exist.
     /// - Returns: A dictionary indicating the success of the operation.
     func updateIncome(id: String, amount: Double, date: String, source: String) throws -> [String: Any] {
-        guard let index = database.incomes.firstIndex(where: { $0.id == id }) else {
+        guard let _ = database.incomes.firstIndex(where: { $0.id == id }) else {
             throw ExpenseTrackerError.dataNotFound
         }
         let newIncome: DatabaseIncome = .init(id: id, amount: amount, date: date, source: source)
-        database.updateIncome(at: index, with: newIncome)
+        database.updateIncome(for: id, with: newIncome)
         return ["data": true]
     }
     
@@ -224,10 +224,10 @@ class DatabaseWorker {
     /// - Throws: `ExpenseTrackerError.dataNotFound` if the income ID does not exist.
     /// - Returns: A dictionary indicating the success of the operation.
     func deleteIncome(id: String) throws -> [String: Any] {
-        guard let index = database.incomes.firstIndex(where: { $0.id == id }) else {
+        guard let _ = database.incomes.firstIndex(where: { $0.id == id }) else {
             throw ExpenseTrackerError.dataNotFound
         }
-        database.deleteIncome(at: index)
+        database.deleteIncome(id)
         return ["data": true]
     }
     
