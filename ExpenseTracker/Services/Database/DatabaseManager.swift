@@ -85,7 +85,7 @@ protocol IncomeDataStore {
     
     /// Deletes all income records from the database.
     /// - Parameter completion: A closure that returns a `Result` indicating success (`true`) or failure (`Error`).
-    func deleteAllIncome(completion: @escaping (Result<Bool, Error>) -> Void)
+    func deleteAllIncomes(completion: @escaping (Result<Bool, Error>) -> Void)
 }
 
 typealias DatabaseQueryType = ExpenseDataStore & IncomeDataStore
@@ -176,7 +176,7 @@ class DatabaseManager: ExpenseDataStore, IncomeDataStore {
     
     /// Deletes all income entries from the database.
     /// - SeeAlso: `IncomeDataStore.deleteAllIncome(completion:)`
-    func deleteAllIncome(completion: @escaping (Result<Bool, Error>) -> Void) {
+    func deleteAllIncomes(completion: @escaping (Result<Bool, Error>) -> Void) {
         databaseHandler.request(.deleteAllIncome) { result in
             self.handleResponse(result, completion: completion)
         }
