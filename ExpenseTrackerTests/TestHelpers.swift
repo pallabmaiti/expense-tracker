@@ -35,6 +35,26 @@ func newTestDatabaseIncome(
     .init(id: id, amount: amount, date: date.formattedString(), source: source.rawValue)
 }
 
+func newTestExpense(
+    id: String = UUID().uuidString,
+    name: String = "Test Expense",
+    amount: Double = 100.0,
+    date: Date = Date(),
+    category: ExpenseTracker.Category = .other,
+    note: String = "Test Note"
+) -> Expense {
+    .init(id: id, name: name, amount: amount, date: date, category: category, note: note)
+}
+
+func newTestIncome(
+    id: String = UUID().uuidString,
+    amount: Double = 10000.0,
+    date: Date = Date(),
+    source: ExpenseTracker.Source = .salary
+) -> Income {
+    .init(id: id, amount: amount, source: source, date: date)
+}
+
 extension Date {
     func byAdding(_ component: Foundation.Calendar.Component, value: Int) -> Date {
         return Foundation.Calendar.current.date(byAdding: component, value: value, to: self)!

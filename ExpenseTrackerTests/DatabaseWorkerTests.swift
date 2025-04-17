@@ -61,6 +61,13 @@ struct DatabaseWorkerTests {
         #expect(updatedFirstExpense["id"] as? String == expenseId)
     }
     
+    @Test("Update expense failure", .tags(.expense.update))
+    func updateExpenseFailure() async {
+        #expect(throws: ExpenseTrackerError.dataNotFound) {
+            _ = try databaseWorker.updateExpense(id: "some-id", name: "Updated Test Expense", amount: 200.0, date: Date().byAdding(.day, value: -1).formattedString(), category: ExpenseTracker.Category.entertainment.rawValue, note: "Updated Weekly grocery shopping")
+        }
+    }
+    
     @Test("Delete expense", .tags(.expense.delete))
     func deleteExpense() async throws {
         _ = databaseWorker.saveExpense(name: "Test Expense", amount: 100.0, date: Date().formattedString(), category: ExpenseTracker.Category.food.rawValue, note: "Weekly grocery shopping")
@@ -133,6 +140,13 @@ struct DatabaseWorkerTests {
         #expect(updatedFirstIncome["date"] as? String == Date().byAdding(.day, value: -1).formattedString())
         #expect(updatedFirstIncome["source"] as? String == ExpenseTracker.Source.business.rawValue)
         #expect(updatedFirstIncome["id"] as? String == incomeId)
+    }
+    
+    @Test("Update income failure", .tags(.income.update))
+    func updateIncomeFailure() async throws {
+        #expect(throws: ExpenseTrackerError.dataNotFound) {
+            _ = try databaseWorker.updateIncome(id: "some-id", amount: 200.0, date: Date().byAdding(.day, value: -1).formattedString(), source: ExpenseTracker.Source.business.rawValue)
+        }
     }
     
     @Test("Delete income", .tags(.income.delete))
