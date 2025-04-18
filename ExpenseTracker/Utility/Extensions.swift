@@ -52,3 +52,12 @@ extension Collection {
         return !isEmpty
     }
 }
+
+extension Bundle {
+    static var clerkPublishableKey: String {
+        guard let key = main.infoDictionary?["CLERK_PUBLISHABLE_KEY"] as? String else {
+            fatalError(#function + ": Missing CLERK_PUBLISHABLE_KEY in Secrets.xcconfig")
+        }
+        return key
+    }
+}

@@ -136,6 +136,7 @@ struct DashboardView: View {
                     }
                 }
             }
+            .toolbarSyncButton()
             .sheet(isPresented: $viewModel.showAddExpense) {
                 AddExpenseView(databaseManager: databaseManager, onSave: viewModel.fetchExpenses)
             }
@@ -193,4 +194,5 @@ struct DashboardView: View {
 #Preview {
     DashboardView(databaseManager: DatabaseManager(databaseHandler: DatabaseHandlerImpl(database: InMemoryDatabase())))
         .environmentObject(TabManager())
+        .environment(UserProvider())
 }

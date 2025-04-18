@@ -13,7 +13,8 @@ import SwiftUI
 /// of the app. The `@main` attribute indicates that this is the starting point.
 @main
 struct ExpenseTrackerApp: App {
-    
+    @State private var userProvider = UserProvider()
+
     /// An instance of `TabManager` that tracks the selected tab index throughout the app.
     ///
     /// It's marked with `@State` to maintain its lifecycle and ensure it stays alive across view updates.
@@ -27,8 +28,22 @@ struct ExpenseTrackerApp: App {
     /// - `.environmentObject(tabManager)` injects the `TabManager` into the view hierarchy.
     var body: some Scene {
         WindowGroup {
-            SplashScreenView()
-                .environmentObject(tabManager)
+            ZStack {
+                if userProvider.isLoaded {
+                    SplashScreenView()
+                } else {
+                    ProgressView()
+                }
+            }
+            .environmentObject(tabManager)
+            .environment(userProvider)
+            .task {
+                do {
+                    try await userProvider.load()
+                } catch {
+                    print(error.localizedDescription)
+                }
+            }
         }
     }
 }
