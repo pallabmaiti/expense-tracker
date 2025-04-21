@@ -18,14 +18,14 @@ protocol Database {
     func addExpense(_ expense: DatabaseExpense)
     
     /// Deletes an expense at the specified index.
-    /// - Parameter index: The index of the expense to be removed.
-    func deleteExpense(at index: Int)
+    /// - Parameter id: The id of the expense to be removed.
+    func deleteExpense(_ id: String)
     
     /// Updates an existing expense at the given index with a new expense.
     /// - Parameters:
-    ///   - index: The index of the expense to be updated.
+    ///   - id: The id of the expense to be updated.
     ///   - newExpense: The new expense data to replace the existing one.
-    func updateExpense(at index: Int, with newExpense: DatabaseExpense)
+    func updateExpense(for id: String, with newExpense: DatabaseExpense)
     
     /// Clears all stored expenses from the database.
     func clearExpenses()
@@ -38,14 +38,14 @@ protocol Database {
     func addIncome(_ income: DatabaseIncome)
     
     /// Deletes an income entry from the database at a specific index.
-    /// - Parameter index: The index of the income entry to be deleted.
-    func deleteIncome(at index: Int)
+    /// - Parameter id: The id of the income entry to be deleted.
+    func deleteIncome(_ id: String)
     
     /// Updates an existing income entry at a specific index with new data.
     /// - Parameters:
-    ///   - index: The index of the income entry to be updated.
+    ///   - id: The id of the income entry to be updated.
     ///   - newIncome: The updated `DatabaseIncome` object.
-    func updateIncome(at index: Int, with newIncome: DatabaseIncome)
+    func updateIncome(for id: String, with newIncome: DatabaseIncome)
     
     /// Removes all income entries from the database.
     func clearIncomes()
@@ -58,7 +58,7 @@ class UserDefaultsDatabase: Database {
     private var _expenses: [DatabaseExpense] = [] {
         didSet {
             if let data = try? JSONEncoder().encode(_expenses) {
-                UserDefaults.standard.set(data, forKey: "Expenses")
+                userDefaults.set(data, forKey: "Expenses")
             }
         }
     }
@@ -66,19 +66,44 @@ class UserDefaultsDatabase: Database {
     private var _incomes: [DatabaseIncome] = [] {
         didSet {
             if let data = try? JSONEncoder().encode(_incomes) {
-                UserDefaults.standard.set(data, forKey: "Incomes")
+                userDefaults.set(data, forKey: "Incomes")
             }
         }
     }
     
     /// Initializes the database by loading stored expenses from `UserDefaults`.
     init() {
-        if let data = UserDefaults.standard.data(forKey: "Expenses") {
+        self.userDefaults = .standard
+        
+        if let data = userDefaults.data(forKey: "Expenses") {
             if let decode = try? JSONDecoder().decode([DatabaseExpense].self, from: data) {
                 _expenses = decode
             }
         }
-        if let data = UserDefaults.standard.data(forKey: "Incomes") {
+        if let data = userDefaults.data(forKey: "Incomes") {
+            if let decode = try? JSONDecoder().decode([DatabaseIncome].self, from: data) {
+                _incomes = decode
+            }
+        }
+    }
+    
+    /// A private constant that holds the reference to the `UserDefaults` instance.
+    /// This can be either a named suite (for shared data between app groups) or the standard UserDefaults.
+    private let userDefaults: UserDefaults
+
+    /// Initializes a new instance with a specific suite name for `UserDefaults`.
+    /// - Parameter suiteName: A string identifying the suite (app group or container) to be used.
+    ///   If the suite name is invalid or not found, the initializer falls back to `.standard` UserDefaults.
+    ///   This is useful when you want to share data between the main app and its extensions (like widgets or watch apps).
+    init(suiteName: String) {
+        self.userDefaults = UserDefaults(suiteName: suiteName) ?? .standard
+        
+        if let data = userDefaults.data(forKey: "Expenses") {
+            if let decode = try? JSONDecoder().decode([DatabaseExpense].self, from: data) {
+                _expenses = decode
+            }
+        }
+        if let data = userDefaults.data(forKey: "Incomes") {
             if let decode = try? JSONDecoder().decode([DatabaseIncome].self, from: data) {
                 _incomes = decode
             }
@@ -106,23 +131,23 @@ class UserDefaultsDatabase: Database {
     }
     
     /// Deletes an expense at the specified index and updates `UserDefaults`.
-    /// - Parameter index: The index of the expense to be removed.
-    func deleteExpense(at index: Int) {
+    /// - Parameter id: The id of the expense to be removed.
+    func deleteExpense(_ id: String) {
         queue.async(flags: .barrier) { [weak self] in
             guard let self else { return }
-            guard index >= 0, index < _expenses.count else { return }
+            guard let index = _expenses.firstIndex(where: { $0.id == id }) else { return }
             _expenses.remove(at: index)
         }
     }
     
     /// Updates an existing expense at the given index with a new expense and saves the change to `UserDefaults`.
     /// - Parameters:
-    ///   - index: The index of the expense to be updated.
+    ///   - id: The id of the expense to be updated.
     ///   - newExpense: The new expense data to replace the existing one.
-    func updateExpense(at index: Int, with newExpense: DatabaseExpense) {
+    func updateExpense(for id: String, with newExpense: DatabaseExpense) {
         queue.async(flags: .barrier) { [weak self] in
             guard let self else { return }
-            guard index >= 0, index < _expenses.count else { return }
+            guard let index = _expenses.firstIndex(where: { $0.id == id }) else { return }
             _expenses[index] = newExpense
         }
     }
@@ -154,22 +179,22 @@ class UserDefaultsDatabase: Database {
     
     /// Updates an existing income entry at a specific index in a thread-safe manner.
     /// - Parameters:
-    ///   - index: The index of the income entry to be updated.
+    ///   - id: The id of the income entry to be updated.
     ///   - newIncome: The updated `DatabaseIncome` object.
-    func updateIncome(at index: Int, with newIncome: DatabaseIncome) {
+    func updateIncome(for id: String, with newIncome: DatabaseIncome) {
         queue.async(flags: .barrier) { [weak self] in
             guard let self else { return }
-            guard index >= 0, index < _incomes.count else { return }
+            guard let index = _incomes.firstIndex(where: { $0.id == id }) else { return }
             _incomes[index] = newIncome
         }
     }
     
     /// Deletes an income entry at a given index in a thread-safe manner.
-    /// - Parameter index: The index of the income entry to be deleted.
-    func deleteIncome(at index: Int) {
+    /// - Parameter id: The id of the income entry to be deleted.
+    func deleteIncome(_ id: String) {
         queue.async(flags: .barrier) { [weak self] in
             guard let self else { return }
-            guard index >= 0, index < _incomes.count else { return }
+            guard let index = _incomes.firstIndex(where: { $0.id == id }) else { return }
             _incomes.remove(at: index)
         }
     }
@@ -213,24 +238,24 @@ class InMemoryDatabase: Database {
     }
     
     /// Deletes an expense from the database at a specific index.
-    /// - Parameter index: The index of the expense to be deleted.
-    func deleteExpense(at index: Int) {
+    /// - Parameter id: The id of the expense to be deleted.
+    func deleteExpense(_ id: String) {
         queue.async(flags: .barrier) { [weak self] in
             guard let self else { return }
-            guard index >= 0, index < _expenses.count else { return }
-            _expenses.remove(at: index) // Removes the expense at the given index
+            guard let index = _expenses.firstIndex(where: { $0.id == id }) else { return }
+            _expenses.remove(at: index)
         }
     }
     
     /// Updates an existing expense at a specific index with a new expense.
     /// - Parameters:
-    ///   - index: The index of the expense to be updated.
+    ///   - id: The id of the expense to be updated.
     ///   - newExpense: The `DatabaseExpense` that will replace the existing expense.
-    func updateExpense(at index: Int, with newExpense: DatabaseExpense) {
+    func updateExpense(for id: String, with newExpense: DatabaseExpense) {
         queue.async(flags: .barrier) { [weak self] in
             guard let self else { return }
-            guard index >= 0, index < _expenses.count else { return }
-            _expenses[index] = newExpense // Updates the expense at the specified index
+            guard let index = _expenses.firstIndex(where: { $0.id == id }) else { return }
+            _expenses[index] = newExpense
         }
     }
     
@@ -264,22 +289,22 @@ class InMemoryDatabase: Database {
     
     /// Updates an existing income at a specific index with a new income.
     /// - Parameters:
-    ///   - index: The index of the income to be updated.
+    ///   - id: The id of the income to be updated.
     ///   - newIncome: The `DatabaseIncome` that will replace the existing income.
-    func updateIncome(at index: Int, with newIncome: DatabaseIncome) {
+    func updateIncome(for id: String, with newIncome: DatabaseIncome) {
         queue.async(flags: .barrier) { [weak self] in
             guard let self else { return }
-            guard index >= 0, index < _incomes.count else { return }
+            guard let index = _incomes.firstIndex(where: { $0.id == id }) else { return }
             _incomes[index] = newIncome
         }
     }
     
     /// Deletes an income from the database at a specific index.
-    /// - Parameter index: The index of the income to be deleted.
-    func deleteIncome(at index: Int) {
+    /// - Parameter id: The id of the income to be deleted.
+    func deleteIncome(_ id: String) {
         queue.async(flags: .barrier) { [weak self] in
             guard let self else { return }
-            guard index >= 0, index < _incomes.count else { return }
+            guard let index = _incomes.firstIndex(where: { $0.id == id }) else { return }
             _incomes.remove(at: index)
         }
     }
