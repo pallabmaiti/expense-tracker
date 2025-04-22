@@ -7,15 +7,24 @@
 
 import SwiftUI
 
+/// A view that presents the sign-in screen with options for email and Google sign-in.
 struct SignInView: View {
+    /// The view model managing the sign-in logic and state.
     @State private var viewModel: ViewModel
-    
+
+    /// The user provider handling authentication logic.
     var userProvider: UserProvider
+
+    /// A closure executed when the user taps "Sign up".
     var onSignUp: () -> Void
-    
+
+    /// Initializes the `SignInView` with a user provider and sign-up callback.
+    /// - Parameters:
+    ///   - userProvider: The provider handling sign-in operations.
+    ///   - onSignUp: A closure triggered when the user selects sign-up.
     init(userProvider: UserProvider, onSignUp: @escaping () -> Void) {
         self.userProvider = userProvider
-        _viewModel = .init(wrappedValue: .init(userProvider: userProvider))
+        self._viewModel = .init(wrappedValue: .init(userProvider: userProvider))
         self.onSignUp = onSignUp
     }
     

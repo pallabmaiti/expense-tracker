@@ -54,6 +54,12 @@ extension Collection {
 }
 
 extension Bundle {
+    
+    /// Retrieves the Clerk publishable key from the app's Info.plist.
+    ///
+    /// - Returns: The value of `CLERK_PUBLISHABLE_KEY` from the Info.plist.
+    /// - Note: This key should be defined in your `Secrets.xcconfig` and included via build settings.
+    /// - Warning: If the key is missing, the app will crash with a `fatalError`, which is intentional for fail-fast behavior during development.
     static var clerkPublishableKey: String {
         guard let key = main.infoDictionary?["CLERK_PUBLISHABLE_KEY"] as? String else {
             fatalError(#function + ": Missing CLERK_PUBLISHABLE_KEY in Secrets.xcconfig")

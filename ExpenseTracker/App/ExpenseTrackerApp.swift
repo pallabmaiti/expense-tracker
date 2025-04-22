@@ -13,6 +13,8 @@ import SwiftUI
 /// of the app. The `@main` attribute indicates that this is the starting point.
 @main
 struct ExpenseTrackerApp: App {
+    /// An instance of `UserProvider` that handles authentication and user state.
+    /// Using `@State` keeps it alive during the lifetime of the scene.
     @State private var userProvider = UserProvider()
 
     /// An instance of `TabManager` that tracks the selected tab index throughout the app.

@@ -7,11 +7,18 @@
 
 import SwiftUI
 
+/// A reusable form view for capturing user sign-up details.
 struct SignUpForm: View {
+    /// The user's first name (bound to a parent view's state).
     @Binding var firstName: String
+    
+    /// The user's last name (bound to a parent view's state).
     @Binding var lastName: String
+    
+    /// The user's email address (bound to a parent view's state).
     @Binding var email: String
     
+    /// A closure executed when the user taps the "Continue" button.
     var action: () -> Void
     
     var body: some View {
@@ -45,12 +52,22 @@ struct SignUpForm: View {
     }
 }
 
+/// A view that handles the sign-up process, including form-based and social sign-in,
+/// and OTP verification once the sign-up is initiated.
 struct SignUpView: View {
+    /// The view model that manages sign-up state and logic.
     @State private var viewModel: ViewModel
     
+    /// The user provider used to perform sign-up and authentication tasks.
     var userProvider: UserProvider
+    
+    /// Callback executed when the user taps "Sign in" (for users who already have an account).
     var onSignIn: () -> Void
     
+    /// Initializes the sign-up view with dependencies.
+    /// - Parameters:
+    ///   - userProvider: A shared user provider instance to handle auth logic.
+    ///   - onSignIn: A closure that switches to the sign-in view.
     init(userProvider: UserProvider, onSignIn: @escaping () -> Void) {
         self.userProvider = userProvider
         _viewModel = .init(wrappedValue: .init(userProvider: userProvider))

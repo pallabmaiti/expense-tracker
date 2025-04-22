@@ -7,14 +7,28 @@
 
 import SwiftUI
 
+/// A view for verifying a one-time password (OTP) sent to the user's email.
+///
+/// Includes an OTP input field, verification button, and a way to resend the OTP if needed.
+/// Also handles loading state and error alerts.
 struct VerifyOTPView: View {
+    
+    /// ViewModel responsible for OTP verification and resend logic.
     @State private var viewModel: ViewModel
     
+    /// The title displayed at the top of the view.
     var title: String
+    
+    /// The subtitle (usually describing the action or email target).
     var subtitle: String
+    
+    /// Instance of `UserProvider` for performing backend verification.
     var userProvider: UserProvider
+    
+    /// Callback to close/dismiss the view.
     var close: () -> Void
     
+    /// Custom initializer to set properties and initialize the ViewModel.
     init(title: String, subtitle: String, userProvider: UserProvider, close: @escaping () -> Void) {
         self.title = title
         self.subtitle = subtitle
@@ -26,6 +40,8 @@ struct VerifyOTPView: View {
     var body: some View {
         ZStack {
             VStack {
+                
+                // Close button
                 Button {
                     close()
                 } label: {
@@ -34,18 +50,23 @@ struct VerifyOTPView: View {
                         .frame(width: 40, height: 40)
                 }
                 .padding()
+                
+                // Main title
                 Text(title)
                     .font(.title)
                     .fontWeight(.bold)
                     .padding(.horizontal)
                 
+                // Subtitle for context (e.g. “Enter the OTP sent to your email”)
                 Text(subtitle)
                     .font(.title3)
                     .padding(.horizontal)
                 
+                // OTP input view
                 OTPView(otpCode: $viewModel.otpCode)
                     .padding()
                 
+                // "Verify" button - only enabled when 6 digits are entered
                 PrimaryButton("Verify", isEnabled: viewModel.otpCode.count == 6) {
                     Task {
                         await viewModel.verifyOTP()
@@ -53,6 +74,7 @@ struct VerifyOTPView: View {
                 }
                 .padding()
                 
+                // Resend code prompt
                 HStack {
                     Text("Didn't receive the code?")
                     
@@ -68,12 +90,14 @@ struct VerifyOTPView: View {
                 
                 Spacer()
             }
+            // Alert shown on error
             .alert("Error", isPresented: $viewModel.showError) {
                 Button("Ok") { }
             } message: {
                 Text(viewModel.errorMessage)
             }
             
+            // Full-screen loader shown when `userProvider.isLoading` is true
             if userProvider.isLoading {
                 VStack {
                     ProgressView()
