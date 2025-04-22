@@ -13,7 +13,7 @@ import SwiftUI
 /// and provides animated transitions between them.
 struct SignInOrSignUpView: View {
     /// The shared `UserProvider` from the environment for authentication operations.
-    @Environment(UserProvider.self) var userProvider
+    @Environment(\.userProvider) var userProvider
 
     /// A flag indicating whether the view is currently showing the sign-in screen.
     @State private var isSignInMode: Bool = false
@@ -43,5 +43,5 @@ struct SignInOrSignUpView: View {
 
 #Preview {
     SignInOrSignUpView()
-        .environment(UserProvider())
+        .environment(\.userProvider, ClerkUserProvider())
 }

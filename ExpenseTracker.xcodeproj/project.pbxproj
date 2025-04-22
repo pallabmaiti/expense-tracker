@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		ED621E162DB2434300369112 /* Clerk in Frameworks */ = {isa = PBXBuildFile; productRef = ED621E152DB2434300369112 /* Clerk */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		ED73E01C2DAF7E0300F2092A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -15,9 +19,6 @@
 			remoteInfo = ExpenseTracker;
 		};
 /* End PBXContainerItemProxy section */
-/* Begin PBXBuildFile section */
-		ED621E162DB2434300369112 /* Clerk in Frameworks */ = {isa = PBXBuildFile; productRef = ED621E152DB2434300369112 /* Clerk */; };
-/* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		ED21E98E2D95286200DC60F1 /* ExpenseTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ExpenseTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };

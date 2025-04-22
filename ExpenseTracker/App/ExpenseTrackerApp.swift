@@ -15,7 +15,7 @@ import SwiftUI
 struct ExpenseTrackerApp: App {
     /// An instance of `UserProvider` that handles authentication and user state.
     /// Using `@State` keeps it alive during the lifetime of the scene.
-    @State private var userProvider = UserProvider()
+    @State private var userProvider = ClerkUserProvider()
 
     /// An instance of `TabManager` that tracks the selected tab index throughout the app.
     ///
@@ -38,7 +38,7 @@ struct ExpenseTrackerApp: App {
                 }
             }
             .environmentObject(tabManager)
-            .environment(userProvider)
+            .environment(\.userProvider, userProvider)
             .task {
                 do {
                     try await userProvider.load()

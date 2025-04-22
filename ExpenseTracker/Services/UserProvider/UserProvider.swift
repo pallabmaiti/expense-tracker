@@ -31,11 +31,68 @@ struct User: Identifiable, Codable {
     var lastName: String?
 }
 
+/// A protocol defining the interface for managing user authentication and session state.
+///
+/// This should be adopted by any type that handles user-related operations like sign-in,
+/// sign-up, OTP verification, and sign-out, as well as managing loading states and user info.
+///
+/// - Note: Marked with `@MainActor` since most operations affect UI-related state.
+@MainActor
+protocol UserProvider {
+    
+    /// Indicates whether a user-related operation (e.g., sign-in, verification) is currently in progress.
+    var isLoading: Bool { get }
+    
+    /// The currently authenticated user, or `nil` if no user is signed in.
+    var user: User? { get }
+    
+    /// Loads the current user session or initializes any required state.
+    ///
+    /// - Throws: An error if the user session could not be loaded.
+    func load() async throws
+    
+    /// Initiates a sign-in process with the given email address.
+    ///
+    /// - Parameter email: The user's email address.
+    /// - Throws: A `UserProviderError` if sign-in fails (e.g., invalid email or network error).
+    func signIn(email: String) async throws(UserProviderError)
+    
+    /// Resends the OTP (One-Time Password) to the user’s email.
+    ///
+    /// - Throws: A `UserProviderError` if resending the OTP fails.
+    func resendOTP() async throws(UserProviderError)
+    
+    /// Verifies the OTP entered by the user.
+    ///
+    /// - Parameter code: The 6-digit OTP code.
+    /// - Throws: A `UserProviderError` if the code is invalid or expired.
+    func verifyOTP(_ code: String) async throws(UserProviderError)
+    
+    /// Initiates Google-based sign-in flow.
+    ///
+    /// - Throws: A `UserProviderError` if the Google sign-in process fails.
+    func signInWithGoogle() async throws(UserProviderError)
+    
+    /// Signs up a new user with an email address and personal details.
+    ///
+    /// - Parameters:
+    ///   - emailAddress: The user’s email address.
+    ///   - firstName: The user’s first name.
+    ///   - lastName: The user’s last name.
+    /// - Throws: A `UserProviderError` if sign-up fails.
+    func signUp(emailAddress: String, firstName: String, lastName: String) async throws(UserProviderError)
+    
+    /// Signs the user out of the app.
+    ///
+    /// - Throws: A `UserProviderError` if sign-out fails.
+    func signOut() async throws(UserProviderError)
+}
+
 /// A class that handles user authentication logic using the Clerk SDK.
 /// This class is observable and runs on the main actor, suitable for use in SwiftUI views.
 @MainActor
 @Observable
-class UserProvider {
+class ClerkUserProvider: UserProvider {
     
     /// A flag indicating whether an authentication operation is currently in progress.
     var isLoading: Bool = false
@@ -189,7 +246,7 @@ class UserProvider {
             try await clerk.signOut()
         } catch {
             if case let error as ClerkAPIError = error {
-                throw UserProviderError.error(error.message ?? error.localizedDescription)
+                throw UserProviderError.error(error.longMessage ?? error.localizedDescription)
             } else {
                 throw UserProviderError.error(error.localizedDescription)
             }

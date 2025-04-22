@@ -194,5 +194,5 @@ struct DashboardView: View {
 #Preview {
     DashboardView(databaseManager: DatabaseManager(databaseHandler: DatabaseHandlerImpl(database: InMemoryDatabase())))
         .environmentObject(TabManager())
-        .environment(UserProvider())
+        .environment(\.userProvider, ClerkUserProvider())
 }

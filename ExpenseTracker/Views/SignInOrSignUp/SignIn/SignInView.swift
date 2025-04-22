@@ -97,5 +97,5 @@ struct SignInView: View {
 }
 
 #Preview {
-    SignInView(userProvider: UserProvider()) { }
+    SignInView(userProvider: ClerkUserProvider()) { }
 }

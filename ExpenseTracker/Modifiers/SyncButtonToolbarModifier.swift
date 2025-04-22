@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ToolbarSyncButtonModifier: ViewModifier {
-    @Environment(UserProvider.self) private var userProvider
+    @Environment(\.userProvider) private var userProvider
     
     @State private var isPresented = false
     

@@ -58,7 +58,7 @@ extension VerifyOTPView {
                 try await userProvider.resendOTP()
             } catch {
                 showError = true
-                errorMessage = error.localizedDescription
+                errorMessage = error.localizedErrorMessage
             }
         }
     }

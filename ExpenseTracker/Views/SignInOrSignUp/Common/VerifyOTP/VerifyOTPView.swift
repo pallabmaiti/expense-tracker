@@ -112,5 +112,5 @@ struct VerifyOTPView: View {
 }
 
 #Preview {
-    VerifyOTPView(title: "Check your email", subtitle: "to continue with sign up", userProvider: UserProvider()) { }
+    VerifyOTPView(title: "Check your email", subtitle: "to continue with sign up", userProvider: ClerkUserProvider()) { }
 }
