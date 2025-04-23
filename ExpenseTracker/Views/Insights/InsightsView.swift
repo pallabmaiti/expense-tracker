@@ -172,6 +172,7 @@ struct InsightsView: View {
                 }
             }
             .navigationTitle("Insights")
+            .toolbarSyncButton()
             .task {
                 // Fetch data when view appears
                 viewModel.fetchIncomes()
