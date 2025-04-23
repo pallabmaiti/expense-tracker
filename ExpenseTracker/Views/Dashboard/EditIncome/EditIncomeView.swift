@@ -106,7 +106,8 @@ struct EditIncomeView: View {
     /// Updates the income with the new values from the form.
     /// This method calls the view model to perform the update in the database and triggers the `onUpdate` closure on success.
     func updateIncome() {
-        viewModel.updateIncome { success in
+        Task {
+            let success = await viewModel.updateIncome()
             if success {
                 onUpdate()
                 dismiss()
@@ -117,7 +118,8 @@ struct EditIncomeView: View {
     /// Deletes the income.
     /// This method calls the view model to perform the delete operation and dismisses the view on success.
     func deleteIncome() {
-        viewModel.deleteIncome { success in
+        Task {
+            let success = await viewModel.deleteIncome()
             if success {
                 onUpdate()
                 dismiss()

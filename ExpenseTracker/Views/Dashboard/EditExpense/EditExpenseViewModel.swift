@@ -55,40 +55,32 @@ extension EditExpenseView {
 
         /// Updates an existing expense in the database.
         /// - Parameter completion: A closure that returns a `Bool` indicating success (`true`) or failure (`false`).
-        func updateExpense(_ completion: @escaping (Bool) -> Void) {
-            databaseManager.updateExpense(
-                id: expense.id,
-                name: name.trimmingCharacters(in: .whitespacesAndNewlines),
-                amount: amount,
-                date: date.formattedString(),
-                category: category.rawValue,
-                note: note.trimmingCharacters(in: .whitespacesAndNewlines)
-            ) { [weak self] result in
-                guard let self else { return }
-                switch result {
-                case .success(let success):
-                    completion(success)
-                case .failure(let error):
-                    completion(false)
-                    showError = true
-                    errorMessage = error.localizedDescription
-                }
+        func updateExpense() async -> Bool {
+            do {
+                return try await databaseManager.updateExpense(
+                    id: expense.id,
+                    name: name.trimmingCharacters(in: .whitespacesAndNewlines),
+                    amount: amount,
+                    date: date.formattedString(),
+                    category: category.rawValue,
+                    note: note.trimmingCharacters(in: .whitespacesAndNewlines)
+                )
+            } catch {
+                showError = true
+                errorMessage = error.localizedDescription
+                return false
             }
         }
         
         /// Deletes an expense from the database.
         /// - Parameter completion: A closure that returns a `Bool` indicating success (`true`) or failure (`false`).
-        func deleteExpense(_ completion: @escaping (Bool) -> Void) {
-            databaseManager.deleteExpense(id: expense.id) { [weak self] result in
-                guard let self else { return }
-                switch result {
-                case .success(let success):
-                    completion(success)
-                case .failure(let error):
-                    completion(false)
-                    showError = true
-                    errorMessage = error.localizedDescription
-                }
+        func deleteExpense() async -> Bool {
+            do {
+                return try await databaseManager.deleteExpense(id: expense.id)
+            } catch {
+                showError = true
+                errorMessage = error.localizedDescription
+                return false
             }
         }
     }

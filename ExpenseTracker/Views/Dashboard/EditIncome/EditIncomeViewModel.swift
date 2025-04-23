@@ -51,33 +51,25 @@ extension EditIncomeView {
 
         /// Updates an existing income in the database.
         /// - Parameter completion: A closure that returns a `Bool` indicating success (`true`) or failure (`false`).
-        func updateIncome(_ completion: @escaping (Bool) -> Void) {
-            databaseManager.updateIncome(id: income.id, amount: amount, date: date.formattedString(), source: source.rawValue) { [weak self] result in
-                guard let self else { return }
-                switch result {
-                case .success(let success):
-                    completion(success)
-                case .failure(let error):
-                    completion(false)
-                    showError = true
-                    errorMessage = error.localizedDescription
-                }
+        func updateIncome() async -> Bool {
+            do {
+                return try await databaseManager.updateIncome(id: income.id, amount: amount, date: date.formattedString(), source: source.rawValue)
+            } catch {
+                showError = true
+                errorMessage = error.localizedDescription
+                return false
             }
         }
         
         /// Deletes an income from the database.
         /// - Parameter completion: A closure that returns a `Bool` indicating success (`true`) or failure (`false`).
-        func deleteIncome(_ completion: @escaping (Bool) -> Void) {
-            databaseManager.deleteIncome(id: income.id) { [weak self] result in
-                guard let self else { return }
-                switch result {
-                case .success(let success):
-                    completion(success)
-                case .failure(let error):
-                    completion(false)
-                    showError = true
-                    errorMessage = error.localizedDescription
-                }
+        func deleteIncome() async -> Bool {
+            do {
+                return try await databaseManager.deleteIncome(id: income.id)
+            } catch {
+                showError = true
+                errorMessage = error.localizedDescription
+                return false
             }
         }
     }

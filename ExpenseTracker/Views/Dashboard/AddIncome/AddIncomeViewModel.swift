@@ -46,17 +46,13 @@ extension AddIncomeView {
         /// This method accepts the necessary income details (amount, date, and source) and passes them to the database manager to be saved.
         ///
         /// - Parameter completion: A closure that returns a `Bool` indicating success or failure. If successful, it returns `true`; otherwise, `false`.
-        func addIncome(_ completion: @escaping (Bool) -> Void) {
-            databaseManager.saveIncome(amount: amount, date: date.formattedString(), source: source.rawValue) { [weak self] result in
-                guard let self else { return }
-                switch result {
-                case .success(let success):
-                    completion(success)
-                case .failure(let error):
-                    completion(false)
-                    self.showError = true
-                    self.errorMessage = error.localizedDescription
-                }
+        func addIncome() async -> Bool {
+            do {
+                return try await databaseManager.saveIncome(amount: amount, date: date.formattedString(), source: source.rawValue)
+            } catch {
+                self.showError = true
+                self.errorMessage = error.localizedDescription
+                return false
             }
         }
     }

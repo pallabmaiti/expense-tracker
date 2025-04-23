@@ -33,4 +33,6 @@ enum ExpenseTrackerError: Error {
     
     /// Indicates that the requested data could not be found.
     case dataNotFound
+    
+    case invalidData
 }

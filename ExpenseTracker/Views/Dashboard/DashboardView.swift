@@ -138,17 +138,32 @@ struct DashboardView: View {
             }
             .toolbarSyncButton()
             .sheet(isPresented: $viewModel.showAddExpense) {
-                AddExpenseView(databaseManager: databaseManager, onSave: viewModel.fetchExpenses)
+                AddExpenseView(databaseManager: databaseManager) {
+                    Task {
+                        await viewModel.fetchExpenses()
+                    }
+                }
             }
             .sheet(isPresented: $viewModel.showAddIncome) {
-                AddIncomeView(databaseManager: databaseManager, onSave: viewModel.fetchIncomes)
+                AddIncomeView(databaseManager: databaseManager) {
+                    Task {
+                        await viewModel.fetchIncomes()
+                    }
+                }
             }
             .sheet(item: $viewModel.expenseToUpdate) { item in
-                EditExpenseView(expense: item, databaseManager: databaseManager, onUpdate:
-                                    viewModel.fetchExpenses)
+                EditExpenseView(expense: item, databaseManager: databaseManager) {
+                    Task {
+                        await viewModel.fetchExpenses()
+                    }
+                }
             }
             .sheet(item: $viewModel.incomeToUpdate) { item in
-                EditIncomeView(income: item, databaseManager: databaseManager, onUpdate: viewModel.fetchIncomes)
+                EditIncomeView(income: item, databaseManager: databaseManager) {
+                    Task {
+                        await viewModel.fetchIncomes()
+                    }
+                }
             }
             .alert("Error", isPresented: $viewModel.showError) {
                 Button("OK") { }
@@ -156,8 +171,10 @@ struct DashboardView: View {
                 Text(viewModel.errorMessage)
             }
             .onAppear {
-                viewModel.fetchExpenses()
-                viewModel.fetchIncomes()
+                Task {
+                    await viewModel.fetchExpenses()
+                    await viewModel.fetchIncomes()
+                }
             }
             .alert("Delete", isPresented: $viewModel.showExpenseDeleteConfirmation, presenting: viewModel.expenseToDelete) { expense in
                 Button("Cancel", role: .cancel) { }
@@ -181,13 +198,17 @@ struct DashboardView: View {
     /// Deletes the selected expense from the database.
     /// - Parameter expense: The `Expense` object to be deleted.
     func deleteExpense(_ expense: Expense) {
-        viewModel.deleteExpense(id: expense.id)
+        Task {
+            await viewModel.deleteExpense(id: expense.id)
+        }
     }
     
     /// Deletes the selected income from the database.
     /// - Parameter income: The `Income` object to be deleted.
     func deleteIncome(_ income: Income) {
-        viewModel.deleteIncome(id: income.id)
+        Task {
+            await viewModel.deleteIncome(id: income.id)
+        }
     }
 }
 

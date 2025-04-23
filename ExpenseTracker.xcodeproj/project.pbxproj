@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		ED621E162DB2434300369112 /* Clerk in Frameworks */ = {isa = PBXBuildFile; productRef = ED621E152DB2434300369112 /* Clerk */; };
+		EDBE87F72DB8E82A00D27A7F /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = EDBE87F62DB8E82A00D27A7F /* FirebaseCore */; };
+		EDBE87F92DB8E82A00D27A7F /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = EDBE87F82DB8E82A00D27A7F /* FirebaseFirestore */; };
+		EDBE87FB2DB8E82A00D27A7F /* FirebaseFirestoreCombine-Community in Frameworks */ = {isa = PBXBuildFile; productRef = EDBE87FA2DB8E82A00D27A7F /* FirebaseFirestoreCombine-Community */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -56,7 +59,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EDBE87F72DB8E82A00D27A7F /* FirebaseCore in Frameworks */,
+				EDBE87FB2DB8E82A00D27A7F /* FirebaseFirestoreCombine-Community in Frameworks */,
 				ED621E162DB2434300369112 /* Clerk in Frameworks */,
+				EDBE87F92DB8E82A00D27A7F /* FirebaseFirestore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -109,6 +115,9 @@
 			name = ExpenseTracker;
 			packageProductDependencies = (
 				ED621E152DB2434300369112 /* Clerk */,
+				EDBE87F62DB8E82A00D27A7F /* FirebaseCore */,
+				EDBE87F82DB8E82A00D27A7F /* FirebaseFirestore */,
+				EDBE87FA2DB8E82A00D27A7F /* FirebaseFirestoreCombine-Community */,
 			);
 			productName = ExpenseTracker;
 			productReference = ED21E98E2D95286200DC60F1 /* ExpenseTracker.app */;
@@ -167,6 +176,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				ED621E142DB2434300369112 /* XCRemoteSwiftPackageReference "clerk-ios" */,
+				EDBE87F52DB8E82A00D27A7F /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = ED21E98F2D95286200DC60F1 /* Products */;
@@ -502,6 +512,14 @@
 				minimumVersion = 0.55.0;
 			};
 		};
+		EDBE87F52DB8E82A00D27A7F /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.12.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -509,6 +527,21 @@
 			isa = XCSwiftPackageProductDependency;
 			package = ED621E142DB2434300369112 /* XCRemoteSwiftPackageReference "clerk-ios" */;
 			productName = Clerk;
+		};
+		EDBE87F62DB8E82A00D27A7F /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EDBE87F52DB8E82A00D27A7F /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		EDBE87F82DB8E82A00D27A7F /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EDBE87F52DB8E82A00D27A7F /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		EDBE87FA2DB8E82A00D27A7F /* FirebaseFirestoreCombine-Community */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EDBE87F52DB8E82A00D27A7F /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = "FirebaseFirestoreCombine-Community";
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

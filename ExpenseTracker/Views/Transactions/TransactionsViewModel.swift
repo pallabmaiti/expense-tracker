@@ -102,72 +102,62 @@ extension TransactionsView {
         // MARK: - Fetching Data
 
         /// Fetches all incomes from the database and appends them to the transaction list.
-        func fetchIncomes() {
-            databaseManager.fetchIncomes { [weak self] result in
-                guard let self else { return }
-                switch result {
-                case .success(let incomes):
-                    allTransactions.append(contentsOf: incomes)
-                    allTransactions = allTransactions.sorted { $0.formattedDate > $1.formattedDate }
-                case .failure(let error):
-                    showError = true
-                    errorMessage = error.localizedDescription
-                }
+        func fetchIncomes() async {
+            do {
+                let incomes = try await databaseManager.fetchIncomes()
+                allTransactions.append(contentsOf: incomes)
+                allTransactions = allTransactions.sorted { $0.formattedDate > $1.formattedDate }
+            } catch {
+                showError = true
+                errorMessage = error.localizedDescription
             }
+            
         }
-
+        
         /// Fetches all expenses from the database and appends them to the transaction list.
-        func fetchExpenses() {
-            databaseManager.fetchExpenses { [weak self] result in
-                guard let self else { return }
-                switch result {
-                case .success(let expenses):
-                    allTransactions.append(contentsOf: expenses)
-                    allTransactions = allTransactions.sorted { $0.formattedDate > $1.formattedDate }
-                case .failure(let error):
-                    showError = true
-                    errorMessage = error.localizedDescription
-                }
+        func fetchExpenses() async {
+            do {
+                let expenses = try await databaseManager.fetchExpenses()
+                allTransactions.append(contentsOf: expenses)
+                allTransactions = allTransactions.sorted { $0.formattedDate > $1.formattedDate }
+            } catch {
+                showError = true
+                errorMessage = error.localizedDescription
             }
         }
-
+        
         /// Clears all transactions currently held in memory.
         func clearAllTransactions() {
             allTransactions.removeAll()
         }
-
+        
         // MARK: - Deletion
-
+        
         /// Deletes an expense from the database.
         /// - Parameter id: The unique ID of the expense to be deleted.
-        func deleteExpense(_ id: String) {
-            databaseManager.deleteExpense(id: id) { [weak self] result in
-                guard let self else { return }
-                switch result {
-                case .success:
-                    fetchExpenses()
-                case .failure(let error):
-                    showError.toggle()
-                    errorMessage = error.localizedDescription
-                }
+        func deleteExpense(_ id: String) async {
+            do {
+                _ = try await databaseManager.deleteExpense(id: id)
+                await fetchExpenses()
+            } catch {
+                showError.toggle()
+                errorMessage = error.localizedDescription
             }
+            
         }
-
+        
         /// Deletes an income from the database.
         /// - Parameter id: The unique ID of the income to be deleted.
-        func deleteIncome(_ id: String) {
-            databaseManager.deleteIncome(id: id) { [weak self] result in
-                guard let self else { return }
-                switch result {
-                case .success:
-                    fetchIncomes()
-                case .failure(let error):
-                    showError.toggle()
-                    errorMessage = error.localizedDescription
-                }
+        func deleteIncome(_ id: String) async {
+            do {
+                _ = try await databaseManager.deleteIncome(id: id)
+                await fetchIncomes()
+            } catch {
+                showError.toggle()
+                errorMessage = error.localizedDescription
             }
         }
-
+        
         // MARK: - Filtering
 
         /// Filters the list of transactions based on selected options (date, category, source, amount, search).

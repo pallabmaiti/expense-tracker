@@ -122,7 +122,8 @@ struct EditExpenseView: View {
     /// Updates the expense with the new values from the form.
     /// This method calls the view model to perform the update in the database and triggers the `onUpdate` closure on success.
     func updateExpense() {
-        viewModel.updateExpense { success in
+        Task {
+            let success = await viewModel.updateExpense()
             if success {
                 onUpdate()
                 dismiss()
@@ -133,7 +134,8 @@ struct EditExpenseView: View {
     /// Deletes the expense.
     /// This method calls the view model to perform the delete operation and dismisses the view on success.
     func deleteExpense() {
-        viewModel.deleteExpense { success in
+        Task {
+            let success = await viewModel.deleteExpense()
             if success {
                 onUpdate()
                 dismiss()

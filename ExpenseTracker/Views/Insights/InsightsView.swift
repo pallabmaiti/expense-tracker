@@ -174,15 +174,25 @@ struct InsightsView: View {
             .navigationTitle("Insights")
             .toolbarSyncButton()
             .task {
-                // Fetch data when view appears
-                viewModel.fetchIncomes()
-                viewModel.fetchExpenses()
+                Task {
+                    // Fetch data when view appears
+                    await viewModel.fetchIncomes()
+                    await viewModel.fetchExpenses()
+                }
             }
             .sheet(isPresented: $viewModel.showAddExpense) {
-                AddExpenseView(databaseManager: databaseManager, onSave: viewModel.fetchExpenses)
+                AddExpenseView(databaseManager: databaseManager) {
+                    Task {
+                        await viewModel.fetchExpenses()
+                    }
+                }
             }
             .sheet(isPresented: $viewModel.showAddIncome) {
-                AddIncomeView(databaseManager: databaseManager, onSave: viewModel.fetchIncomes)
+                AddIncomeView(databaseManager: databaseManager) {
+                    Task {
+                        await viewModel.fetchIncomes()
+                    }
+                }
             }
         }
     }

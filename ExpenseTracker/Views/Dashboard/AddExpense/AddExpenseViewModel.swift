@@ -48,23 +48,19 @@ extension AddExpenseView {
         /// This method accepts the necessary expense details (name, amount, date, category, and note) and passes them to the database manager to be saved.
         ///
         /// - Parameter completion: A closure that returns a `Bool` indicating success or failure. If successful, it returns `true`; otherwise, `false`.
-        func addExpense(_ completion: @escaping (Bool) -> Void) {
-            databaseManager.saveExpense(
-                name: name.trimmingCharacters(in: .whitespacesAndNewlines),
-                amount: amount,
-                date: date.formattedString(),
-                category: category.rawValue,
-                note: note.trimmingCharacters(in: .whitespacesAndNewlines)
-            ) { [weak self] result in
-                guard let self = self else { return }
-                switch result {
-                case .success(let success):
-                    completion(success)
-                case .failure(let error):
-                    completion(false)
-                    showError = true
-                    errorMessage = error.localizedDescription
-                }
+        func addExpense() async -> Bool {
+            do {
+                return try await databaseManager.saveExpense(
+                    name: name.trimmingCharacters(in: .whitespacesAndNewlines),
+                    amount: amount,
+                    date: date.formattedString(),
+                    category: category.rawValue,
+                    note: note.trimmingCharacters(in: .whitespacesAndNewlines)
+                )
+            } catch {
+                showError = true
+                errorMessage = error.localizedDescription
+                return false
             }
         }
     }

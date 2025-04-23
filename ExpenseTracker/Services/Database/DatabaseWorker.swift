@@ -99,10 +99,10 @@ class DatabaseWorker {
     /// Fetches all expense data from the database.
     ///
     /// - Returns: A dictionary containing the expense data.
-    func fetchExpenses() -> [String: Any] {
+    func fetchExpenses() async throws -> [String: Any] {
         var data = [[String: Any]]()
         
-        database.expenses.forEach {
+        try await database.fetchExpenses().forEach {
             data.append([
                 "id": $0.id,
                 "name": $0.name,
@@ -125,9 +125,9 @@ class DatabaseWorker {
     ///   - category: The category of the expense.
     ///   - note: Additional notes about the expense.
     /// - Returns: A dictionary confirming the operation success.
-    func saveExpense(name: String, amount: Double, date: String, category: String, note: String) -> [String: Any] {
+    func saveExpense(name: String, amount: Double, date: String, category: String, note: String) async throws -> [String: Any] {
         let databaseExpense: DatabaseExpense = .init(name: name, amount: amount, date: date, category: category, note: note)
-        database.addExpense(databaseExpense)
+        try await database.addExpense(databaseExpense)
         return ["data": true]
     }
     
@@ -136,11 +136,8 @@ class DatabaseWorker {
     /// - Parameter id: The unique identifier of the expense to delete.
     /// - Throws: `ExpenseTrackerError.dataNotFound` if the expense does not exist.
     /// - Returns: A dictionary confirming the deletion.
-    func deleteExpense(id: String) throws -> [String: Any] {
-        guard let _ = database.expenses.firstIndex(where: { $0.id == id }) else {
-            throw ExpenseTrackerError.dataNotFound
-        }
-        database.deleteExpense(id)
+    func deleteExpense(id: String) async throws -> [String: Any] {
+        try await database.deleteExpense(id)
         return ["data": true]
     }
     
@@ -155,30 +152,27 @@ class DatabaseWorker {
     ///   - note: The updated details about the expense.
     /// - Throws: `ExpenseTrackerError.dataNotFound` if the expense does not exist.
     /// - Returns: A dictionary confirming the update.
-    func updateExpense(id: String, name: String, amount: Double, date: String, category: String, note: String) throws -> [String: Any] {
-        guard let _ = database.expenses.firstIndex(where: { $0.id == id }) else {
-            throw ExpenseTrackerError.dataNotFound
-        }
+    func updateExpense(id: String, name: String, amount: Double, date: String, category: String, note: String) async throws -> [String: Any] {
         let newExpense: DatabaseExpense = .init(id: id, name: name, amount: amount, date: date, category: category, note: note)
-        database.updateExpense(for: id, with: newExpense)
+        try await database.updateExpense(for: id, with: newExpense)
         return ["data": true]
     }
     
     /// Deletes all stored expenses in the database.
     ///
     /// - Returns: A dictionary confirming the deletion of all expenses.
-    func deleteAllExpenses() -> [String: Any] {
-        database.clearExpenses()
+    func deleteAllExpenses() async throws -> [String: Any] {
+        try await database.clearExpenses()
         return ["data": true]
     }
     
     /// Fetches all income data from the database.
     ///
     /// - Returns: A dictionary containing the income data.
-    func fetchIncomes() -> [String: Any] {
+    func fetchIncomes() async throws -> [String: Any] {
         var data = [[String: Any]]()
         
-        database.incomes.forEach {
+        try await database.fetchIncomes().forEach {
             data.append([
                 "id": $0.id,
                 "amount": $0.amount,
@@ -196,9 +190,9 @@ class DatabaseWorker {
     ///   - date: The date of the income in `String` format.
     ///   - source: The source of income (e.g., Salary, Business, etc.).
     /// - Returns: A dictionary indicating the success of the operation.
-    func saveIncome(amount: Double, date: String, source: String) -> [String: Any] {
+    func saveIncome(amount: Double, date: String, source: String) async throws -> [String: Any] {
         let newIncome: DatabaseIncome = .init(amount: amount, date: date, source: source)
-        database.addIncome(newIncome)
+        try await database.addIncome(newIncome)
         return ["data": true]
     }
     
@@ -210,12 +204,9 @@ class DatabaseWorker {
     ///   - note: The updated source of income.
     /// - Throws: `ExpenseTrackerError.dataNotFound` if the income ID does not exist.
     /// - Returns: A dictionary indicating the success of the operation.
-    func updateIncome(id: String, amount: Double, date: String, source: String) throws -> [String: Any] {
-        guard let _ = database.incomes.firstIndex(where: { $0.id == id }) else {
-            throw ExpenseTrackerError.dataNotFound
-        }
+    func updateIncome(id: String, amount: Double, date: String, source: String) async throws -> [String: Any] {
         let newIncome: DatabaseIncome = .init(id: id, amount: amount, date: date, source: source)
-        database.updateIncome(for: id, with: newIncome)
+        try await database.updateIncome(for: id, with: newIncome)
         return ["data": true]
     }
     
@@ -223,18 +214,15 @@ class DatabaseWorker {
     /// - Parameter id: The unique identifier of the income to delete.
     /// - Throws: `ExpenseTrackerError.dataNotFound` if the income ID does not exist.
     /// - Returns: A dictionary indicating the success of the operation.
-    func deleteIncome(id: String) throws -> [String: Any] {
-        guard let _ = database.incomes.firstIndex(where: { $0.id == id }) else {
-            throw ExpenseTrackerError.dataNotFound
-        }
-        database.deleteIncome(id)
+    func deleteIncome(id: String) async throws -> [String: Any] {
+        try await database.deleteIncome(id)
         return ["data": true]
     }
     
     /// Deletes all income entries from the database.
     /// - Returns: A dictionary indicating the success of the operation.
-    func deleteAllIncomes() -> [String: Any] {
-        database.clearIncomes()
+    func deleteAllIncomes() async throws -> [String: Any] {
+        try await database.clearIncomes()
         return ["data": true]
     }
 }

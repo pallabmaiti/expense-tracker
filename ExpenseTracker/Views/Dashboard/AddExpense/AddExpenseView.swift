@@ -103,7 +103,8 @@ struct AddExpenseView: View {
     /// If the expense is successfully added, it calls the `onSave` closure and dismisses the view.
     /// If an error occurs, it shows an error alert with the appropriate message.
     func addExpense() {
-        viewModel.addExpense { success in
+        Task {
+            let success = await viewModel.addExpense()
             if success {
                 dismiss()
                 onSave()

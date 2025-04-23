@@ -75,7 +75,8 @@ struct AddIncomeView: View {
     }
 
     func addIncome() {
-        viewModel.addIncome { success in
+        Task {
+            let success = await viewModel.addIncome()
             if success {
                 onSave()  // Notify parent view to refresh data
                 dismiss() // Dismiss the AddIncomeView

@@ -145,9 +145,11 @@ struct TransactionsView: View {
             .toolbarSyncButton()
             .task {
                 /// On view load, clear existing data and fetch transactions from database.
-                viewModel.clearAllTransactions()
-                viewModel.fetchExpenses()
-                viewModel.fetchIncomes()
+                Task {
+                    viewModel.clearAllTransactions()
+                    await viewModel.fetchExpenses()
+                    await viewModel.fetchIncomes()
+                }
             }
             
             /// Sheet for filtering by expense category.
@@ -182,13 +184,20 @@ struct TransactionsView: View {
 
             /// Sheet for editing an expense.
             .sheet(item: $viewModel.expenseToUpdate) { item in
-                EditExpenseView(expense: item, databaseManager: databaseManager, onUpdate:
-                                    viewModel.fetchExpenses)
+                EditExpenseView(expense: item, databaseManager: databaseManager) {
+                    Task {
+                        await viewModel.fetchExpenses()
+                    }
+                }
             }
 
             /// Sheet for editing an income.
             .sheet(item: $viewModel.incomeToUpdate) { item in
-                EditIncomeView(income: item, databaseManager: databaseManager, onUpdate: viewModel.fetchIncomes)
+                EditIncomeView(income: item, databaseManager: databaseManager) {
+                    Task {
+                        await viewModel.fetchIncomes()
+                    }
+                }
             }
 
             /// Sheet for selecting date range.
@@ -211,7 +220,9 @@ struct TransactionsView: View {
             .alert("Delete", isPresented: $viewModel.showExpenseDeleteConfirmation, presenting: viewModel.expenseToDelete) { expense in
                 Button("Cancel", role: .cancel) { }
                 Button("Delete", role: .destructive) {
-                    viewModel.deleteExpense(expense.id)
+                    Task {
+                        await viewModel.deleteExpense(expense.id)
+                    }
                 }
             } message: { expense in
                 Text("Are you sure you want to delete \(expense.name)?")
@@ -221,7 +232,9 @@ struct TransactionsView: View {
             .alert("Delete", isPresented: $viewModel.showIncomeDeleteConfirmation, presenting: viewModel.incomeToDelete) { income in
                 Button("Cancel", role: .cancel) { }
                 Button("Delete", role: .destructive) {
-                    viewModel.deleteIncome(income.id)
+                    Task {
+                        await viewModel.deleteIncome(income.id)
+                    }
                 }
             } message: { income in
                 Text("Are you sure you want to delete \(income.source.rawValue)?")
