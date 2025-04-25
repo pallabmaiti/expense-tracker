@@ -25,15 +25,28 @@ extension VerifyOTPView {
         
         /// A flag that triggers showing the error alert when `true`.
         var showError: Bool = false
+        
+        /// Indicates whether an operation is currently in progress.
+        var isLoading: Bool = false
+        
+        /// A progress message displayed with the `ProgressView`.
+        var progressTitle: String = ""
 
         /// Reference to the `UserProvider`, injected from the parent view.
         var userProvider: UserProvider
         
+        /// Reference to the `DatabaseManager`, injected from the parent view.
+        var databaseManager: DatabaseManager
+        
+        var onVerificationSuccess: (() -> Void)
+
         /// Initializes the ViewModel with a given `UserProvider`.
         ///
         /// - Parameter userProvider: The shared user provider instance used to verify or resend OTP.
-        init(userProvider: UserProvider) {
+        init(userProvider: UserProvider, databaseManager: DatabaseManager, onVerificationSuccess: @escaping () -> Void) {
             self.userProvider = userProvider
+            self.databaseManager = databaseManager
+            self.onVerificationSuccess = onVerificationSuccess
         }
         
         /// Attempts to verify the OTP entered by the user using the `UserProvider`.
@@ -42,7 +55,11 @@ extension VerifyOTPView {
         /// - On failure: Sets the error message and triggers the alert.
         func verifyOTP() async {
             do {
+                isLoading = true
+                progressTitle = "Verifying OTP..."
                 try await userProvider.verifyOTP(otpCode)
+                isLoading = false
+                onVerificationSuccess()
             } catch {
                 showError = true
                 errorMessage = error.localizedErrorMessage
@@ -55,7 +72,10 @@ extension VerifyOTPView {
         /// - On failure: Shows an alert with the appropriate error message.
         func resendOTP() async {
             do {
+                isLoading = true
+                progressTitle = "Resending OTP..."
                 try await userProvider.resendOTP()
+                isLoading = false
             } catch {
                 showError = true
                 errorMessage = error.localizedErrorMessage

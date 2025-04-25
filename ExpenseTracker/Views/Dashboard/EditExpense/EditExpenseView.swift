@@ -26,7 +26,7 @@ struct EditExpenseView: View {
     ///   - expense: The `Expense` to be edited.
     ///   - databaseManager: The database manager responsible for performing data operations.
     ///   - onUpdate: A closure to call when the expense is successfully updated.
-    init(expense: Expense, databaseManager: DatabaseQueryType, onUpdate: @escaping () -> Void) {
+    init(expense: Expense, databaseManager: DatabaseManager, onUpdate: @escaping () -> Void) {
         self.viewModel = .init(expense: expense, databaseManager: databaseManager)
         self.onUpdate = onUpdate
     }

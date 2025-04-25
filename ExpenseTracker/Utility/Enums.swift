@@ -211,3 +211,22 @@ enum AmountRange: CaseIterable {
         }
     }
 }
+
+/// Represents the available types of databases the app can switch between.
+enum DatabaseType {
+    case inMemory
+    case local
+    case firebase(String) // Associated value holds the user ID
+    
+    /// Human-readable description of the database type
+    var description: String {
+        switch self {
+        case .inMemory:
+            return "InMemory"
+        case .local:
+            return "Local"
+        case let .firebase(userId):
+            return "Firebase-\(userId)"
+        }
+    }
+}

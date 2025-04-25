@@ -15,12 +15,13 @@ enum DatabaseQuery {
     
     /// Adds a new expense.
     /// - Parameters:
+    ///   - id: The unique identifier of the expense.
     ///   - name: The name or description of the expense.
     ///   - amount: The amount spent.
     ///   - date: The date of the expense in `yyyy-MM-dd` format.
     ///   - category: The category of the expense.
     ///   - note: Additional details or comments about the expense.
-    case addExpense(String, Double, String, String, String)
+    case addExpense(String, String, Double, String, String, String)
     
     /// Updates an existing expense.
     /// - Parameters:
@@ -44,10 +45,11 @@ enum DatabaseQuery {
     
     /// Adds a new income entry.
     /// - Parameters:
+    ///   - id: The existing unique identifier of the income.
     ///   - amount: The amount of income.
     ///   - date: The date of the income entry.
     ///   - source: The source of income (e.g., Salary, Business, etc.).
-    case addIncome(Double, String, String)
+    case addIncome(String, Double, String, String)
     
     /// Updates an existing income entry.
     /// - Parameters:

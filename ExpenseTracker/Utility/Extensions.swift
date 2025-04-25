@@ -67,3 +67,54 @@ extension Bundle {
         return key
     }
 }
+
+/// An extension on `UserDefaults` to persist and retrieve the selected `DatabaseType`.
+extension UserDefaults {
+    
+    /// A computed property to get/set the current database type.
+    ///
+    /// Persists a string representation of the `DatabaseType` in UserDefaults under the key `"DatabaseType"`.
+    ///
+    /// - Supported formats:
+    ///   - `"InMemory"` → `.inMemory`
+    ///   - `"Local"` → `.local`
+    ///   - `"Firebase-<userId>"` → `.firebase(userId)`
+    var databaseType: DatabaseType? {
+        get {
+            guard let typeString = string(forKey: "DatabaseType") else { return nil }
+            
+            switch typeString {
+            case "InMemory":
+                return .inMemory
+            case "Local":
+                return .local
+            default:
+                // Assumes format: "Firebase-<userId>"
+                if typeString.starts(with: "Firebase-"),
+                   let userId = typeString.split(separator: "-").last {
+                    return .firebase(String(userId))
+                }
+                return nil
+            }
+        }
+        set {
+            set(newValue?.description, forKey: "DatabaseType")
+        }
+    }
+    
+    
+    /// A computed property that tracks whether the user is signed in.
+    ///
+    /// This property reads and writes a boolean value to `UserDefaults` using the key `"IsSignedIn"`.
+    /// Use this to persist the user's authentication state between app launches.
+    var isSignedIn: Bool {
+        get {
+            // Retrieve the sign-in state from UserDefaults (defaults to false if the key doesn't exist).
+            bool(forKey: "IsSignedIn")
+        }
+        set {
+            // Save the updated sign-in state to UserDefaults.
+            set(newValue, forKey: "IsSignedIn")
+        }
+    }
+}

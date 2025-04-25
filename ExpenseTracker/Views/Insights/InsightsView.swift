@@ -110,11 +110,11 @@ struct InsightsView: View {
     @State var viewModel: ViewModel
     
     /// The data source for fetching and managing income/expense data.
-    let databaseManager: DatabaseQueryType
+    let databaseManager: DatabaseManager
 
     /// Initializes the `InsightsView` with a given database manager.
-    /// - Parameter databaseManager: Object conforming to `DatabaseQueryType` to handle data operations.
-    init(databaseManager: DatabaseQueryType) {
+    /// - Parameter databaseManager: Object conforming to `DatabaseManager` to handle data operations.
+    init(databaseManager: DatabaseManager) {
         self.databaseManager = databaseManager
         self.viewModel = .init(databaseManager: databaseManager)
     }

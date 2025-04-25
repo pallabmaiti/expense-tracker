@@ -9,6 +9,11 @@ import SwiftUI
 
 /// A view that presents the sign-in screen with options for email and Google sign-in.
 struct SignInView: View {
+    @Environment(\.dismiss) var dismiss
+    
+    /// The environment-injected instance of `DatabaseManager`.
+    @Environment(DatabaseManager.self) var databaseManager
+
     /// The view model managing the sign-in logic and state.
     @State private var viewModel: ViewModel
 
@@ -33,11 +38,14 @@ struct SignInView: View {
             VerifyOTPView(
                 title: "Check your email",
                 subtitle: "to continue with sign in",
-                userProvider: userProvider
+                userProvider: userProvider,
+                databaseManager: databaseManager
             ) {
                 withAnimation {
                     viewModel.isVerifying = false
                 }
+            } onVerificationSuccess: {
+                dismiss()
             }
             .transition(.slide.combined(with: .opacity))
         } else {
@@ -53,7 +61,10 @@ struct SignInView: View {
                     .minimumScaleFactor(0.9)
                 
                 SocialSignInView() {
-                    Task { await viewModel.signInWithGoogle() }
+                    Task {
+                        await viewModel.signInWithGoogle()
+                        dismiss()
+                    }
                 }
                 .padding(.top)
                 
@@ -86,9 +97,7 @@ struct SignInView: View {
             .padding()
             .transition(.slide.combined(with: .opacity))
             .alert("Error", isPresented: $viewModel.showError) {
-                Button("Ok") {
-                    
-                }
+                Button("Ok") { }
             } message: {
                 Text(viewModel.errorMessage)
             }
@@ -98,4 +107,11 @@ struct SignInView: View {
 
 #Preview {
     SignInView(userProvider: ClerkUserProvider()) { }
+        .environment(
+            DatabaseManager(
+                databaseHandler: DatabaseHandlerImpl(
+                    database: InMemoryDatabase()
+                )
+            )
+        )
 }

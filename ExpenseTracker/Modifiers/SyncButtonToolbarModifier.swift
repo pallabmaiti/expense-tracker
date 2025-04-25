@@ -7,15 +7,21 @@
 
 import SwiftUI
 
+/// A `ViewModifier` that adds a toolbar button to the top leading corner,
+/// enabling user sign-in/sign-out and syncing data with a selected database source.
 struct ToolbarSyncButtonModifier: ViewModifier {
     @Environment(\.userProvider) private var userProvider
+    @Environment(DatabaseManager.self) private var databaseManager
     
     @State private var isPresented = false
-    
+
+    /// The body of the modified view, injecting a toolbar with a sign-in/out button
+    /// and handling database switching logic based on user session state.
     func body(content: Content) -> some View {
         content
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
+                    // Toggle the account sheet when tapped
                     Button {
                         isPresented.toggle()
                     } label: {
@@ -23,23 +29,29 @@ struct ToolbarSyncButtonModifier: ViewModifier {
                     }
                 }
             }
+            // Present sheet to either show account info or SignIn/SignUp view
             .sheet(isPresented: $isPresented, content: {
-                if let user = userProvider.user {
+                if UserDefaults.standard.isSignedIn {
                     VStack {
-                        Text("Hello \(user.email ?? "User")")
+                        Text("Hello \(userProvider.user?.email ?? "User")")
                         Button("Sign out") {
-                            Task { try? await userProvider.signOut() }
+                            Task {
+                                try? await userProvider.signOut()
+                            }
                         }
                     }
                 } else {
                     SignInOrSignUpView()
                 }
-                
             })
     }
 }
 
 extension View {
+    /// Applies the toolbar sync button modifier to the view.
+    ///
+    /// This adds a person icon to the top leading corner, allowing user authentication
+    /// and syncing between local and Firebase databases.
     func toolbarSyncButton() -> some View {
         self.modifier(ToolbarSyncButtonModifier())
     }

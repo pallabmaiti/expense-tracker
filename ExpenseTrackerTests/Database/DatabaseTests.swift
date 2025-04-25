@@ -28,39 +28,46 @@ struct DatabaseTests {
     
     @Test("Add Expense", .tags(.expense.add))
     func addExpense() async throws {
-        database.addExpense(newExpense)
+        try await database.addExpense(newExpense)
+        let expenses = try await database.fetchExpenses()
         
-        #expect(database.expenses.count == 1)
-        #expect(database.expenses[0].id == newExpense.id)
+        #expect(expenses.count == 1)
+        #expect(expenses[0].id == newExpense.id)
     }
 
     @Test("Update Expense", .tags(.expense.update))
     func updateExpense() async throws {
-        database.addExpense(newExpense)
+        try await database.addExpense(newExpense)
         
         let newDate = Calendar.current.date(byAdding: .day, value: 1, to: Date())!
         let updatedExpense = newTestDatabaseExpense(id: newExpense.id, name: "Updated Expense", amount: 200.0, date: newDate, category: .entertainment, note: "Updated Note")
         
-        database.updateExpense(for: newExpense.id, with: updatedExpense)
+        try await database.updateExpense(for: newExpense.id, with: updatedExpense)
         
-        #expect(database.expenses.count == 1)
-        #expect(database.expenses[0].id == updatedExpense.id)
-        #expect(database.expenses[0].name == updatedExpense.name)
-        #expect(database.expenses[0].amount == updatedExpense.amount)
-        #expect(database.expenses[0].date == updatedExpense.date)
-        #expect(database.expenses[0].category == updatedExpense.category)
-        #expect(database.expenses[0].note == updatedExpense.note)
+        let expenses = try await database.fetchExpenses()
+        
+        #expect(expenses.count == 1)
+        #expect(expenses[0].id == updatedExpense.id)
+        #expect(expenses[0].name == updatedExpense.name)
+        #expect(expenses[0].amount == updatedExpense.amount)
+        #expect(expenses[0].date == updatedExpense.date)
+        #expect(expenses[0].category == updatedExpense.category)
+        #expect(expenses[0].note == updatedExpense.note)
     }
     
     @Test("Delete Expense", .tags(.expense.delete))
     func deleteExpense() async throws {
-        database.addExpense(newExpense)
+        try await database.addExpense(newExpense)
         
-        #expect(database.expenses.count == 1)
+        var expenses = try await database.fetchExpenses()
         
-        database.deleteExpense(newExpense.id)
+        #expect(expenses.count == 1)
         
-        #expect(database.expenses.count == 0)
+        try await database.deleteExpense(newExpense.id)
+        
+        expenses = try await database.fetchExpenses()
+        
+        #expect(expenses.count == 0)
     }
     
     @Test("Clear Expenses", .tags(.expense.delete))
@@ -68,11 +75,11 @@ struct DatabaseTests {
         database.addExpense(newExpense)
         database.addExpense(newTestDatabaseExpense())
         
-        #expect(database.expenses.count == 2)
+        #expect(expenses.count == 2)
         
         database.clearExpenses()
         
-        #expect(database.expenses.count == 0)
+        #expect(expenses.count == 0)
     }
     
     @Test("Add Income", .tags(.income.add))

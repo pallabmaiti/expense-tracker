@@ -32,7 +32,7 @@ extension EditExpenseView {
         // MARK: - Private Properties
 
         /// The database manager responsible for performing data operations.
-        private let databaseManager: DatabaseQueryType
+        private let databaseManager: DatabaseManager
         
         /// The expense to be edited.
         private let expense: Expense
@@ -40,8 +40,8 @@ extension EditExpenseView {
         /// Initializes the `ViewModel` with a database manager.
         /// - Parameters:
         ///   - expense: The `Expense` to be edited.
-        ///   - databaseManager: The `DatabaseQueryType` that provides database operations (e.g., update, delete).
-        init(expense: Expense, databaseManager: DatabaseQueryType) {
+        ///   - databaseManager: The `DatabaseManager` that provides database operations (e.g., update, delete).
+        init(expense: Expense, databaseManager: DatabaseManager) {
             self.databaseManager = databaseManager
             self.expense = expense
             self.amount = expense.amount
@@ -54,7 +54,7 @@ extension EditExpenseView {
         // MARK: - Public Methods
 
         /// Updates an existing expense in the database.
-        /// - Parameter completion: A closure that returns a `Bool` indicating success (`true`) or failure (`false`).
+        /// - Returns: A `Bool` indicating success (`true`) or failure (`false`).
         func updateExpense() async -> Bool {
             do {
                 return try await databaseManager.updateExpense(
@@ -73,7 +73,7 @@ extension EditExpenseView {
         }
         
         /// Deletes an expense from the database.
-        /// - Parameter completion: A closure that returns a `Bool` indicating success (`true`) or failure (`false`).
+        /// - Returns: A `Bool` indicating success (`true`) or failure (`false`).
         func deleteExpense() async -> Bool {
             do {
                 return try await databaseManager.deleteExpense(id: expense.id)

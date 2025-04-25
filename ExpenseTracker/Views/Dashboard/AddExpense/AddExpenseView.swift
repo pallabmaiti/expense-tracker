@@ -13,7 +13,7 @@ import SwiftUI
 /// If an error occurs during the process, an error alert is shown to the user.
 ///
 /// - Parameters:
-///   - databaseManager: The `DatabaseQueryType` used to interact with the backend database for saving the expense.
+///   - databaseManager: The `DatabaseManager` used to interact with the backend database for saving the expense.
 ///   - onSave: A closure called when the expense is successfully saved, allowing the parent view to refresh or update its data.
 
 struct AddExpenseView: View {
@@ -26,7 +26,7 @@ struct AddExpenseView: View {
     var onSave: (() -> Void)
     
     // Initializer for the view, taking the databaseManager and onSave closure as parameters.
-    init(databaseManager: DatabaseQueryType, onSave: @escaping () -> Void) {
+    init(databaseManager: DatabaseManager, onSave: @escaping () -> Void) {
         _viewModel = State(initialValue: .init(databaseManager: databaseManager))
         self.onSave = onSave
     }

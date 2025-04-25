@@ -18,10 +18,10 @@ protocol DatabaseHandler {
 }
 
 /// A concrete implementation of `DatabaseHandler` that interacts with a database through `DatabaseWorker`.
-class DatabaseHandlerImpl: DatabaseHandler {
+final class DatabaseHandlerImpl: DatabaseHandler {
     
     /// A worker responsible for performing database operations.
-    let databaseWorker: DatabaseWorker
+    private let databaseWorker: DatabaseWorker
     
     /// Initializes the `DatabaseHandlerImpl` with an optional database instance.
     /// - Parameter database: The database to be used. Defaults to `UserDefaultsDatabase`.
@@ -40,8 +40,8 @@ class DatabaseHandlerImpl: DatabaseHandler {
             let jsonData = try JSONSerialization.data(withJSONObject: expenses, options: [])
             return jsonData
             
-        case let .addExpense(name, amount, date, category, note):
-            let result = try await databaseWorker.saveExpense(name: name, amount: amount, date: date, category: category, note: note)
+        case let .addExpense(id, name, amount, date, category, note):
+            let result = try await databaseWorker.saveExpense(id: id, name: name, amount: amount, date: date, category: category, note: note)
             let jsonData = try JSONSerialization.data(withJSONObject: result, options: [])
             return jsonData
             
@@ -65,8 +65,8 @@ class DatabaseHandlerImpl: DatabaseHandler {
             let jsonData = try JSONSerialization.data(withJSONObject: expenses, options: [])
             return jsonData
             
-        case let .addIncome(amount, date, source):
-            let result = try await databaseWorker.saveIncome(amount: amount, date: date, source: source)
+        case let .addIncome(id, amount, date, source):
+            let result = try await databaseWorker.saveIncome(id: id, amount: amount, date: date, source: source)
             let jsonData = try JSONSerialization.data(withJSONObject: result, options: [])
             return jsonData
             

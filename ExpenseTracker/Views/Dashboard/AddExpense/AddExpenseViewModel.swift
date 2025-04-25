@@ -9,7 +9,7 @@ import Foundation
 import Observation
 
 /// `ViewModel` is an observable class responsible for handling business logic related to adding an expense.
-/// It interacts with the `DatabaseQueryType` (e.g., a database manager) to save the expense data and provides feedback via a completion handler.
+/// It interacts with the `DatabaseManager` (e.g., a database manager) to save the expense data and provides feedback via a completion handler.
 /// This class is used within the `AddExpenseView` to manage the state and functionality related to adding an expense.
 extension AddExpenseView {
     @Observable
@@ -32,12 +32,12 @@ extension AddExpenseView {
         // MARK: - Private Properties
 
         /// The database manager responsible for handling database operations.
-        private let databaseManager: DatabaseQueryType
+        private let databaseManager: DatabaseManager
         
-        /// Initializes the ViewModel with a given `DatabaseQueryType` (database manager).
+        /// Initializes the ViewModel with a given `DatabaseManager` (database manager).
         ///
-        /// - Parameter databaseManager: An instance of `DatabaseQueryType` used to interact with the backend or local database.
-        init(databaseManager: DatabaseQueryType) {
+        /// - Parameter databaseManager: An instance of `DatabaseManager` used to interact with the backend or local database.
+        init(databaseManager: DatabaseManager) {
             self.databaseManager = databaseManager
         }
         
@@ -47,10 +47,11 @@ extension AddExpenseView {
         ///
         /// This method accepts the necessary expense details (name, amount, date, category, and note) and passes them to the database manager to be saved.
         ///
-        /// - Parameter completion: A closure that returns a `Bool` indicating success or failure. If successful, it returns `true`; otherwise, `false`.
+        /// - Returns: A `Bool` indicating success or failure. If successful, it returns `true`; otherwise, `false`.
         func addExpense() async -> Bool {
             do {
                 return try await databaseManager.saveExpense(
+                    id: UUID().uuidString,
                     name: name.trimmingCharacters(in: .whitespacesAndNewlines),
                     amount: amount,
                     date: date.formattedString(),

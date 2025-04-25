@@ -40,13 +40,13 @@ extension InsightsView {
         // MARK: - Private Properties
         
         /// The database manager responsible for fetching income and expense data.
-        private let databaseManager: DatabaseQueryType
+        private let databaseManager: DatabaseManager
         
         // MARK: - Initialization
         
         /// Initializes the ViewModel with a given database manager.
         /// - Parameter databaseManager: The data provider for incomes and expenses.
-        init(databaseManager: DatabaseQueryType) {
+        init(databaseManager: DatabaseManager) {
             self.databaseManager = databaseManager
         }
         

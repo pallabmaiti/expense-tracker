@@ -85,10 +85,10 @@ enum Month: Int, CaseIterable {
 ///
 /// This class acts as an intermediary between the DatabaseQuery layer and the actual database,
 /// performing data manipulation and ensuring structured responses.
-class DatabaseWorker {
+final class DatabaseWorker {
     
     /// The database instance that stores and retrieves expense data.
-    let database: Database
+    private let database: Database
     
     /// Initializes a `DatabaseWorker` with a specified database.
     /// - Parameter datebase: The database that will be used for storing and managing expenses.
@@ -119,14 +119,15 @@ class DatabaseWorker {
     /// Saves a new expense entry into the database.
     ///
     /// - Parameters:
+    ///   - id: The unique identifier of the expense.
     ///   - name: The name or description of the expense.
     ///   - amount: The amount of money spent.
     ///   - date: The date of the expense in `yyyy-MM-dd` format.
     ///   - category: The category of the expense.
     ///   - note: Additional notes about the expense.
     /// - Returns: A dictionary confirming the operation success.
-    func saveExpense(name: String, amount: Double, date: String, category: String, note: String) async throws -> [String: Any] {
-        let databaseExpense: DatabaseExpense = .init(name: name, amount: amount, date: date, category: category, note: note)
+    func saveExpense(id: String, name: String, amount: Double, date: String, category: String, note: String) async throws -> [String: Any] {
+        let databaseExpense: DatabaseExpense = .init(id: id, name: name, amount: amount, date: date, category: category, note: note)
         try await database.addExpense(databaseExpense)
         return ["data": true]
     }
@@ -186,12 +187,13 @@ class DatabaseWorker {
     
     /// Saves a new income entry to the database.
     /// - Parameters:
+    ///   - id: The unique identifier of the income.
     ///   - amount: The amount of the income.
     ///   - date: The date of the income in `String` format.
     ///   - source: The source of income (e.g., Salary, Business, etc.).
     /// - Returns: A dictionary indicating the success of the operation.
-    func saveIncome(amount: Double, date: String, source: String) async throws -> [String: Any] {
-        let newIncome: DatabaseIncome = .init(amount: amount, date: date, source: source)
+    func saveIncome(id: String, amount: Double, date: String, source: String) async throws -> [String: Any] {
+        let newIncome: DatabaseIncome = .init(id: id, amount: amount, date: date, source: source)
         try await database.addIncome(newIncome)
         return ["data": true]
     }

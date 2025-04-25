@@ -55,10 +55,10 @@ struct TransactionsView: View {
     @State private var viewModel: ViewModel
 
     /// The database manager to fetch and manipulate income and expense data.
-    let databaseManager: DatabaseQueryType
+    let databaseManager: DatabaseManager
 
     /// Initializes the TransactionsView with a provided database manager.
-    init(databaseManager: DatabaseQueryType) {
+    init(databaseManager: DatabaseManager) {
         self.databaseManager = databaseManager
         self.viewModel = .init(databaseManager: databaseManager)
     }

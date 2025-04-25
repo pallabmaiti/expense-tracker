@@ -34,10 +34,10 @@ struct DashboardView: View {
     }
         
     /// The `databaseManager` object that handles the interaction with the data storage.
-    let databaseManager: DatabaseQueryType
+    let databaseManager: DatabaseManager
     
     /// Initializes the `DashboardView` with a given database manager.
-    init(databaseManager: DatabaseQueryType) {
+    init(databaseManager: DatabaseManager) {
         self.databaseManager = databaseManager
         self.viewModel = .init(databaseManager: databaseManager)
     }

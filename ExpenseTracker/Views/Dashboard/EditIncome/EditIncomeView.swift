@@ -26,7 +26,7 @@ struct EditIncomeView: View {
     ///   - income: The `Income` to be edited.
     ///   - databaseManager: The database manager responsible for performing data operations.
     ///   - onUpdate: A closure to call when the income is successfully updated.
-    init(income: Income, databaseManager: DatabaseQueryType, onUpdate: @escaping () -> Void) {
+    init(income: Income, databaseManager: DatabaseManager, onUpdate: @escaping () -> Void) {
         self.viewModel = .init(income: income, databaseManager: databaseManager)
         self.onUpdate = onUpdate
     }

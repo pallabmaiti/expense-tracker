@@ -91,11 +91,11 @@ extension TransactionsView {
         // MARK: - Database
 
         /// Interface to interact with the database for querying and persisting transactions.
-        let databaseManager: DatabaseQueryType
+        let databaseManager: DatabaseManager
 
         /// Initializes the ViewModel with a given database manager.
         /// - Parameter databaseManager: The database interface for transactions.
-        init(databaseManager: DatabaseQueryType) {
+        init(databaseManager: DatabaseManager) {
             self.databaseManager = databaseManager
         }
 

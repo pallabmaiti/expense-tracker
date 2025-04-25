@@ -33,13 +33,13 @@ extension EditIncomeView {
         private let income: Income
 
         /// The database manager responsible for performing data operations.
-        private let databaseManager: DatabaseQueryType
+        private let databaseManager: DatabaseManager
         
         /// Initializes the `ViewModel` with a database manager.
         /// - Parameters:
         ///   - income: The `Income` to be edited.
-        ///   - databaseManager: The `DatabaseQueryType` that provides database operations (e.g., update, delete).
-        init(income: Income, databaseManager: DatabaseQueryType) {
+        ///   - databaseManager: The `DatabaseManager` that provides database operations (e.g., update, delete).
+        init(income: Income, databaseManager: DatabaseManager) {
             self.income = income
             self.databaseManager = databaseManager
             self.amount = income.amount
@@ -50,7 +50,7 @@ extension EditIncomeView {
         // MARK: - Public Methods
 
         /// Updates an existing income in the database.
-        /// - Parameter completion: A closure that returns a `Bool` indicating success (`true`) or failure (`false`).
+        /// - Returns: A `Bool` indicating success (`true`) or failure (`false`).
         func updateIncome() async -> Bool {
             do {
                 return try await databaseManager.updateIncome(id: income.id, amount: amount, date: date.formattedString(), source: source.rawValue)
@@ -62,7 +62,7 @@ extension EditIncomeView {
         }
         
         /// Deletes an income from the database.
-        /// - Parameter completion: A closure that returns a `Bool` indicating success (`true`) or failure (`false`).
+        /// - Returns: A `Bool` indicating success (`true`) or failure (`false`).
         func deleteIncome() async -> Bool {
             do {
                 return try await databaseManager.deleteIncome(id: income.id)

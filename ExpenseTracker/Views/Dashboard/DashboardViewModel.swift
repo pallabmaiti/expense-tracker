@@ -57,10 +57,10 @@ extension DashboardView {
         // MARK: - Private Properties
 
         /// The database manager that handles the database operations.
-        private let databaseManager: DatabaseQueryType
+        private let databaseManager: DatabaseManager
         
         /// Initializes the ViewModel with a given database manager.
-        init(databaseManager: DatabaseQueryType) {
+        init(databaseManager: DatabaseManager) {
             self.databaseManager = databaseManager
         }
         
