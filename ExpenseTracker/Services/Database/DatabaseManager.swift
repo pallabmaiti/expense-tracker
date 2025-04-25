@@ -345,3 +345,8 @@ class DatabaseManager {
         return response.data
     }
 }
+
+extension DatabaseManager {
+    static let userDefaultsDatabaseManager = DatabaseManager(databaseHandler: DatabaseHandlerImpl())
+    static let inMemoryDatabaseManager = DatabaseManager(databaseHandler: DatabaseHandlerImpl(database: InMemoryDatabase()))
+}

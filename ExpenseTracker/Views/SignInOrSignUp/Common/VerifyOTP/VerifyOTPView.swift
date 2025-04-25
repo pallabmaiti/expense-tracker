@@ -27,14 +27,17 @@ struct VerifyOTPView: View {
     
     /// Callback to close/dismiss the view.
     var close: () -> Void
-        
+    
+    var onVerificationSuccess: () -> Void
+    
     /// Custom initializer to set properties and initialize the ViewModel.
     init(title: String, subtitle: String, userProvider: UserProvider, databaseManager: DatabaseManager, close: @escaping () -> Void, onVerificationSuccess: @escaping () -> Void) {
         self.title = title
         self.subtitle = subtitle
         self.userProvider = userProvider
-        self._viewModel = .init(wrappedValue: .init(userProvider: userProvider, databaseManager: databaseManager, onVerificationSuccess: onVerificationSuccess))
+        self._viewModel = .init(wrappedValue: .init(userProvider: userProvider, databaseManager: databaseManager))
         self.close = close
+        self.onVerificationSuccess = onVerificationSuccess
     }
     
     var body: some View {
@@ -94,6 +97,11 @@ struct VerifyOTPView: View {
             Button("Ok") { }
         } message: {
             Text(viewModel.errorMessage)
+        }
+        .onChange(of: viewModel.isVerified) { _, newValue in
+            if newValue {
+                onVerificationSuccess()
+            }
         }
         // Full-screen loader shown when `isLoading` is true
         .progressHUD(isShowing: $viewModel.isLoading, title: $viewModel.progressTitle)

@@ -16,10 +16,10 @@ struct VerifyOTPViewModelTests {
     
     init() async throws {
         userProvider = MockUserProvider()
-        viewModel = .init(userProvider: userProvider)
+        viewModel = .init(userProvider: userProvider, databaseManager: .userDefaultsDatabaseManager)
     }
     
-    @Test("Verify OTP - Success")
+    @Test("Verify OTP - Success", .tags(.verifyOTP))
     func verifyOTPSuccess() async throws {
         viewModel.otpCode = "123456"
         await viewModel.verifyOTP()
@@ -28,7 +28,7 @@ struct VerifyOTPViewModelTests {
         #expect(viewModel.errorMessage == "")
     }
     
-    @Test("Verify OTP - Failure")
+    @Test("Verify OTP - Failure", .tags(.verifyOTP))
     func verifyOTPFailure() async throws {
         viewModel.otpCode = "000000"
         await viewModel.verifyOTP()
@@ -37,7 +37,7 @@ struct VerifyOTPViewModelTests {
         #expect(viewModel.errorMessage == "Verify OTP failed")
     }
     
-    @Test("Resend OTP - Success")
+    @Test("Resend OTP - Success", .tags(.resendOTP))
     func resendOTPSuccess() async throws {
         await viewModel.resendOTP()
         
@@ -45,7 +45,7 @@ struct VerifyOTPViewModelTests {
         #expect(viewModel.errorMessage == "")
     }
     
-    @Test("Resend OTP - Failure")
+    @Test("Resend OTP - Failure", .tags(.resendOTP))
     func resendOTPFailure() async throws {
         userProvider.shouldFailResend = true
         await viewModel.resendOTP()

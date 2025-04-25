@@ -29,6 +29,9 @@ extension VerifyOTPView {
         /// Indicates whether an operation is currently in progress.
         var isLoading: Bool = false
         
+        /// Indicates whether the verification is success or not.
+        var isVerified: Bool = false
+        
         /// A progress message displayed with the `ProgressView`.
         var progressTitle: String = ""
 
@@ -38,15 +41,12 @@ extension VerifyOTPView {
         /// Reference to the `DatabaseManager`, injected from the parent view.
         var databaseManager: DatabaseManager
         
-        var onVerificationSuccess: (() -> Void)
-
         /// Initializes the ViewModel with a given `UserProvider`.
         ///
         /// - Parameter userProvider: The shared user provider instance used to verify or resend OTP.
-        init(userProvider: UserProvider, databaseManager: DatabaseManager, onVerificationSuccess: @escaping () -> Void) {
+        init(userProvider: UserProvider, databaseManager: DatabaseManager) {
             self.userProvider = userProvider
             self.databaseManager = databaseManager
-            self.onVerificationSuccess = onVerificationSuccess
         }
         
         /// Attempts to verify the OTP entered by the user using the `UserProvider`.
@@ -59,7 +59,7 @@ extension VerifyOTPView {
                 progressTitle = "Verifying OTP..."
                 try await userProvider.verifyOTP(otpCode)
                 isLoading = false
-                onVerificationSuccess()
+                isVerified = true
             } catch {
                 showError = true
                 errorMessage = error.localizedErrorMessage

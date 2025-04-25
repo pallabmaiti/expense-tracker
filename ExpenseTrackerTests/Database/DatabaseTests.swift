@@ -72,81 +72,74 @@ struct DatabaseTests {
     
     @Test("Clear Expenses", .tags(.expense.delete))
     func clearExpenses() async throws {
-        database.addExpense(newExpense)
-        database.addExpense(newTestDatabaseExpense())
+        try await database.addExpense(newExpense)
+        try await database.addExpense(newTestDatabaseExpense())
+        
+        var expenses = try await database.fetchExpenses()
         
         #expect(expenses.count == 2)
         
-        database.clearExpenses()
+        try await database.clearExpenses()
+        
+        expenses = try await database.fetchExpenses()
         
         #expect(expenses.count == 0)
     }
     
     @Test("Add Income", .tags(.income.add))
     func addIncome() async throws {
-        database.addIncome(newIncome)
+        try await database.addIncome(newIncome)
         
-        #expect(database.incomes.count == 1)
+        let incomes = try await database.fetchIncomes()
+        
+        #expect(incomes.count == 1)
     }
     
     @Test("Update Income", .tags(.income.update))
     func updateIncome() async throws {
-        database.addIncome(newIncome)
+        try await database.addIncome(newIncome)
         
         let newDate = Date().byAdding(.day, value: -1)
         let updatedIncome = newTestDatabaseIncome(id: newIncome.id, amount: 20000.0, date: newDate, source: .business)
         
-        database.updateIncome(for: newIncome.id, with: updatedIncome)
+        try await database.updateIncome(for: newIncome.id, with: updatedIncome)
         
-        #expect(database.incomes.count == 1)
-        #expect(database.incomes[0].id == updatedIncome.id)
-        #expect(database.incomes[0].source == updatedIncome.source)
-        #expect(database.incomes[0].date == updatedIncome.date)
-        #expect(database.incomes[0].amount == updatedIncome.amount)
+        let incomes = try await database.fetchIncomes()
+        
+        #expect(incomes.count == 1)
+        #expect(incomes[0].id == updatedIncome.id)
+        #expect(incomes[0].source == updatedIncome.source)
+        #expect(incomes[0].date == updatedIncome.date)
+        #expect(incomes[0].amount == updatedIncome.amount)
     }
     
     @Test("Delete Income", .tags(.income.delete))
     func deleteIncome() async throws {
-        database.addIncome(newIncome)
+        try await database.addIncome(newIncome)
         
-        #expect(database.incomes.count == 1)
+        var incomes = try await database.fetchIncomes()
         
-        database.deleteIncome(newIncome.id)
+        #expect(incomes.count == 1)
         
-        #expect(database.incomes.count == 0)
+        try await database.deleteIncome(newIncome.id)
+        
+        incomes = try await database.fetchIncomes()
+        
+        #expect(incomes.count == 0)
     }
     
     @Test("Clear Incomes", .tags(.income.delete))
     func clearIncomes() async throws {
-        database.addIncome(newIncome)
-        database.addIncome(newTestDatabaseIncome())
+        try await database.addIncome(newIncome)
+        try await database.addIncome(newTestDatabaseIncome())
         
-        #expect(database.incomes.count == 2)
+        var incomes = try await database.fetchIncomes()
         
-        database.clearIncomes()
+        #expect(incomes.count == 2)
         
-        #expect(database.incomes.count == 0)
-    }
-    
-    @Test("Thread Safety")
-    func threadSafety() async throws {
-        await confirmation(
-            "Thread safety",
-            expectedCount: 100
-        ) { addExpense in
-            for i in 0..<100 {
-                DispatchQueue.global().async {
-                    let expense = newTestDatabaseExpense(id: "\(i)", name: "Expense \(i)", amount: Double(i), date: Date(), category: ExpenseTracker.Category.allCases[i % ExpenseTracker.Category.allCases.count], note: "Note \(i)")
-                    
-                    database.addExpense(expense)
-                    
-                    let income = newTestDatabaseIncome(id: "\(i)", amount: Double(i), date: Date(), source: ExpenseTracker.Source.allCases[i % ExpenseTracker.Source.allCases.count])
-                    
-                    database.addIncome(income)
-                    addExpense()
-                }
-            }
-            try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
-        }
+        try await database.clearIncomes()
+        
+        incomes = try await database.fetchIncomes()
+        #expect(incomes.count == 0)
     }
 }

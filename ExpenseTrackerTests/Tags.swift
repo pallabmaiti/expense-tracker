@@ -10,6 +10,11 @@ import Testing
 extension Tag {
     enum expense {}
     enum income {}
+    
+    @Tag static var signIn: Tag
+    @Tag static var signUp: Tag
+    @Tag static var verifyOTP: Tag
+    @Tag static var resendOTP: Tag
 }
 
 extension Tag.expense {
