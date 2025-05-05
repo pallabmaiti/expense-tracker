@@ -110,11 +110,11 @@ struct InsightsView: View {
     @State var viewModel: ViewModel
     
     /// The data source for fetching and managing income/expense data.
-    let databaseManager: DatabaseQueryType
+    let databaseManager: DatabaseManager
 
     /// Initializes the `InsightsView` with a given database manager.
-    /// - Parameter databaseManager: Object conforming to `DatabaseQueryType` to handle data operations.
-    init(databaseManager: DatabaseQueryType) {
+    /// - Parameter databaseManager: Object conforming to `DatabaseManager` to handle data operations.
+    init(databaseManager: DatabaseManager) {
         self.databaseManager = databaseManager
         self.viewModel = .init(databaseManager: databaseManager)
     }
@@ -172,17 +172,32 @@ struct InsightsView: View {
                 }
             }
             .navigationTitle("Insights")
-            .toolbarSyncButton()
+            .toolbarSyncButton() {
+                Task {
+                    await viewModel.fetchExpenses()
+                    await viewModel.fetchIncomes()
+                }
+            }
             .task {
-                // Fetch data when view appears
-                viewModel.fetchIncomes()
-                viewModel.fetchExpenses()
+                Task {
+                    // Fetch data when view appears
+                    await viewModel.fetchIncomes()
+                    await viewModel.fetchExpenses()
+                }
             }
             .sheet(isPresented: $viewModel.showAddExpense) {
-                AddExpenseView(databaseManager: databaseManager, onSave: viewModel.fetchExpenses)
+                AddExpenseView(databaseManager: databaseManager) {
+                    Task {
+                        await viewModel.fetchExpenses()
+                    }
+                }
             }
             .sheet(isPresented: $viewModel.showAddIncome) {
-                AddIncomeView(databaseManager: databaseManager, onSave: viewModel.fetchIncomes)
+                AddIncomeView(databaseManager: databaseManager) {
+                    Task {
+                        await viewModel.fetchIncomes()
+                    }
+                }
             }
         }
     }

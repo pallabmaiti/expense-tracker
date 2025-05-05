@@ -19,7 +19,7 @@ struct SignInViewModelTests {
         viewModel = .init(userProvider: userProvider)
     }
 
-    @Test("Sign in - Success")
+    @Test("Sign in - Success", .tags(.signIn))
     func signInSuccess() async throws {
         await viewModel.signIn()
         
@@ -27,7 +27,7 @@ struct SignInViewModelTests {
         #expect(viewModel.errorMessage == "")
     }
     
-    @Test("Sign in - Failure")
+    @Test("Sign in - Failure", .tags(.signIn))
     func signInFailure() async throws {
         userProvider.shouldFailSignIn = true
         await viewModel.signIn()
@@ -36,7 +36,7 @@ struct SignInViewModelTests {
         #expect(viewModel.errorMessage == "Sign in failed")
     }
     
-    @Test("Sign in with Google - Success")
+    @Test("Sign in with Google - Success", .tags(.signIn))
     func signInWithGoogleSuccess() async throws {
         await viewModel.signInWithGoogle()
         
@@ -44,7 +44,7 @@ struct SignInViewModelTests {
         #expect(viewModel.errorMessage == "")
     }
     
-    @Test("Sign in with Google - Failure")
+    @Test("Sign in with Google - Failure", .tags(.signIn))
     func signInWithGoogleFailure() async throws {
         userProvider.shouldFailGoogleSignIn = true
         await viewModel.signInWithGoogle()

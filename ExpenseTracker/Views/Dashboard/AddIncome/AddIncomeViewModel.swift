@@ -9,7 +9,7 @@ import Foundation
 import Observation
 
 /// `ViewModel` is an observable class responsible for handling business logic related to adding an income.
-/// It interacts with the `DatabaseQueryType` (e.g., a database manager) to save the income data and provides feedback via a completion handler.
+/// It interacts with the `DatabaseManager` (e.g., a database manager) to save the income data and provides feedback via a completion handler.
 /// This class is used within the `AddIncomeView` to manage the state and functionality related to adding an income.
 extension AddIncomeView {
     @Observable
@@ -30,12 +30,12 @@ extension AddIncomeView {
         // MARK: - Private Properties
 
         /// The database manager responsible for handling database operations.
-        private let databaseManager: DatabaseQueryType
+        private let databaseManager: DatabaseManager
         
-        /// Initializes the ViewModel with a given `DatabaseQueryType` (database manager).
+        /// Initializes the ViewModel with a given `DatabaseManager` (database manager).
         ///
-        /// - Parameter databaseManager: An instance of `DatabaseQueryType` used to interact with the backend or local database.
-        init(databaseManager: DatabaseQueryType) {
+        /// - Parameter databaseManager: An instance of `DatabaseManager` used to interact with the backend or local database.
+        init(databaseManager: DatabaseManager) {
             self.databaseManager = databaseManager
         }
 
@@ -45,18 +45,14 @@ extension AddIncomeView {
         ///
         /// This method accepts the necessary income details (amount, date, and source) and passes them to the database manager to be saved.
         ///
-        /// - Parameter completion: A closure that returns a `Bool` indicating success or failure. If successful, it returns `true`; otherwise, `false`.
-        func addIncome(_ completion: @escaping (Bool) -> Void) {
-            databaseManager.saveIncome(amount: amount, date: date.formattedString(), source: source.rawValue) { [weak self] result in
-                guard let self else { return }
-                switch result {
-                case .success(let success):
-                    completion(success)
-                case .failure(let error):
-                    completion(false)
-                    self.showError = true
-                    self.errorMessage = error.localizedDescription
-                }
+        /// - Returns: A `Bool` indicating success or failure. If successful, it returns `true`; otherwise, `false`.
+        func addIncome() async -> Bool {
+            do {
+                return try await databaseManager.saveIncome(id: UUID().uuidString, amount: amount, date: date.formattedString(), source: source.rawValue)
+            } catch {
+                self.showError = true
+                self.errorMessage = error.localizedDescription
+                return false
             }
         }
     }

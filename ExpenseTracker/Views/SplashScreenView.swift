@@ -18,6 +18,12 @@ import SwiftUI
 ///   - A logo is displayed at the center with a fade-out animation.
 ///   - The app's name "Expense Tracker" is shown below the logo.
 struct SplashScreenView: View {
+    /// Environment-injected user provider used for authentication and user state management.
+    @Environment(\.userProvider) var userProvider
+    
+    /// State variable holding the current database switcher instance.
+    /// This determines which database (in-memory, local, Firebase) the app should use.
+    @State private var databaseManager = DatabaseManager(databaseHandler: DatabaseHandlerImpl())
     
     /// A state variable that determines whether the splash screen should be active or not.
     /// When `isActive` is true, the main `ExpenseListView` is shown.
@@ -32,6 +38,7 @@ struct SplashScreenView: View {
         if isActive {
             // Transition to the main content view once the splash screen is done.
             ContentView()
+                .environment(databaseManager)
         } else {
             ZStack {
                 // Set background color based on color scheme (dark or light mode).

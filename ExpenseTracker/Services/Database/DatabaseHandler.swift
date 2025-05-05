@@ -11,17 +11,17 @@ import Foundation
 protocol DatabaseHandler {
     
     /// Processes a database request based on the provided DatabaseQuery case.
-    /// - Parameters:
-    ///   - databaseQuery: The `DatabaseQuery` case representing the database operation to be performed.
-    ///   - completion: A closure that returns a `Result` containing either the response data or an error.
-    func request(_ databaseQuery: DatabaseQuery, completion: @escaping (Result<Data, Error>) -> Void)
+    /// - Parameter databaseQuery: The `DatabaseQuery` case representing the database operation to be performed.
+    /// - Returns: The raw `Data` returned from the database operation.
+    /// - Throws: An error if the request fails.
+    func request(_ databaseQuery: DatabaseQuery) async throws -> Data
 }
 
 /// A concrete implementation of `DatabaseHandler` that interacts with a database through `DatabaseWorker`.
-class DatabaseHandlerImpl: DatabaseHandler {
+final class DatabaseHandlerImpl: DatabaseHandler {
     
     /// A worker responsible for performing database operations.
-    let databaseWorker: DatabaseWorker
+    private let databaseWorker: DatabaseWorker
     
     /// Initializes the `DatabaseHandlerImpl` with an optional database instance.
     /// - Parameter database: The database to be used. Defaults to `UserDefaultsDatabase`.
@@ -30,100 +30,60 @@ class DatabaseHandlerImpl: DatabaseHandler {
     }
     
     /// Processes a database request based on the provided DatabaseQuery case and returns the result via a completion handler.
-    /// - Parameters:
-    ///   - databaseQuery: The `DatabaseQuery` case representing the database operation to be performed.
-    ///   - completion: A closure returning a `Result` with either `Data` (successful response) or an `Error` (failure).
-    func request(_ databaseQuery: DatabaseQuery, completion: @escaping (Result<Data, Error>) -> Void) {
+    /// - Parameter databaseQuery: The `DatabaseQuery` case representing the database operation to be performed.
+    /// - Returns: The raw `Data` returned from the database operation.
+    /// - Throws: An error if the request fails.
+    func request(_ databaseQuery: DatabaseQuery) async throws -> Data {
         switch databaseQuery {
         case .getExpenses:
-            do {
-                let expenses = databaseWorker.fetchExpenses()
-                let jsonData = try JSONSerialization.data(withJSONObject: expenses, options: [])
-                completion(.success(jsonData))
-            } catch {
-                completion(.failure(error))
-            }
+            let expenses = try await databaseWorker.fetchExpenses()
+            let jsonData = try JSONSerialization.data(withJSONObject: expenses, options: [])
+            return jsonData
             
-        case let .addExpense(name, amount, date, category, note):
-            do {
-                let result = databaseWorker.saveExpense(name: name, amount: amount, date: date, category: category, note: note)
-                let jsonData = try JSONSerialization.data(withJSONObject: result, options: [])
-                completion(.success(jsonData))
-            } catch {
-                completion(.failure(error))
-            }
+        case let .addExpense(id, name, amount, date, category, note):
+            let result = try await databaseWorker.saveExpense(id: id, name: name, amount: amount, date: date, category: category, note: note)
+            let jsonData = try JSONSerialization.data(withJSONObject: result, options: [])
+            return jsonData
             
         case .deleteExpense(let id):
-            do {
-                let result = try databaseWorker.deleteExpense(id: id)
-                let jsonData = try JSONSerialization.data(withJSONObject: result, options: [])
-                completion(.success(jsonData))
-            } catch {
-                completion(.failure(error))
-            }
+            let result = try await databaseWorker.deleteExpense(id: id)
+            let jsonData = try JSONSerialization.data(withJSONObject: result, options: [])
+            return jsonData
             
         case let .updateExpense(id, name, amount, date, category, note):
-            do {
-                let result = try databaseWorker.updateExpense(id: id, name: name, amount: amount, date: date, category: category, note: note)
-                let jsonData = try JSONSerialization.data(withJSONObject: result, options: [])
-                completion(.success(jsonData))
-            } catch {
-                completion(.failure(error))
-            }
+            let result = try await databaseWorker.updateExpense(id: id, name: name, amount: amount, date: date, category: category, note: note)
+            let jsonData = try JSONSerialization.data(withJSONObject: result, options: [])
+            return jsonData
             
         case .deleteAllExpenses:
-            let result = databaseWorker.deleteAllExpenses()
-            do {
-                let jsonData = try JSONSerialization.data(withJSONObject: result, options: [])
-                completion(.success(jsonData))
-            } catch {
-                completion(.failure(error))
-            }
+            let result = try await databaseWorker.deleteAllExpenses()
+            let jsonData = try JSONSerialization.data(withJSONObject: result, options: [])
+            return jsonData
             
         case .getIncomes:
-            do {
-                let expenses = databaseWorker.fetchIncomes()
-                let jsonData = try JSONSerialization.data(withJSONObject: expenses, options: [])
-                completion(.success(jsonData))
-            } catch {
-                completion(.failure(error))
-            }
+            let expenses = try await databaseWorker.fetchIncomes()
+            let jsonData = try JSONSerialization.data(withJSONObject: expenses, options: [])
+            return jsonData
             
-        case let .addIncome(amount, date, source):
-            do {
-                let result = databaseWorker.saveIncome(amount: amount, date: date, source: source)
-                let jsonData = try JSONSerialization.data(withJSONObject: result, options: [])
-                completion(.success(jsonData))
-            } catch {
-                completion(.failure(error))
-            }
-        
+        case let .addIncome(id, amount, date, source):
+            let result = try await databaseWorker.saveIncome(id: id, amount: amount, date: date, source: source)
+            let jsonData = try JSONSerialization.data(withJSONObject: result, options: [])
+            return jsonData
+            
         case let .updateIncome(id, amount, date, source):
-            do {
-                let result = try databaseWorker.updateIncome(id: id, amount: amount, date: date, source: source)
-                let jsonData = try JSONSerialization.data(withJSONObject: result, options: [])
-                completion(.success(jsonData))
-            } catch {
-                completion(.failure(error))
-            }
+            let result = try await databaseWorker.updateIncome(id: id, amount: amount, date: date, source: source)
+            let jsonData = try JSONSerialization.data(withJSONObject: result, options: [])
+            return jsonData
             
         case let .deleteIncome(id):
-            do {
-                let result = try databaseWorker.deleteIncome(id: id)
-                let jsonData = try JSONSerialization.data(withJSONObject: result, options: [])
-                completion(.success(jsonData))
-            } catch {
-                completion(.failure(error))
-            }
+            let result = try await databaseWorker.deleteIncome(id: id)
+            let jsonData = try JSONSerialization.data(withJSONObject: result, options: [])
+            return jsonData
             
         case .deleteAllIncome:
-            let result = databaseWorker.deleteAllIncomes()
-            do {
-                let jsonData = try JSONSerialization.data(withJSONObject: result, options: [])
-                completion(.success(jsonData))
-            } catch {
-                completion(.failure(error))
-            }
+            let result = try await databaseWorker.deleteAllIncomes()
+            let jsonData = try JSONSerialization.data(withJSONObject: result, options: [])
+            return jsonData
         }
     }
 }

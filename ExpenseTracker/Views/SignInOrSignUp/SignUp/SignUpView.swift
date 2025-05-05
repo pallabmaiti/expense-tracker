@@ -55,6 +55,11 @@ struct SignUpForm: View {
 /// A view that handles the sign-up process, including form-based and social sign-in,
 /// and OTP verification once the sign-up is initiated.
 struct SignUpView: View {
+    @Environment(\.dismiss) var dismiss
+    
+    /// The environment-injected instance of `DatabaseManager`.
+    @Environment(DatabaseManager.self) var databaseManager
+    
     /// The view model that manages sign-up state and logic.
     @State private var viewModel: ViewModel
     
@@ -64,14 +69,17 @@ struct SignUpView: View {
     /// Callback executed when the user taps "Sign in" (for users who already have an account).
     var onSignIn: () -> Void
     
+    var userAuthenticated: (() -> Void)
+    
     /// Initializes the sign-up view with dependencies.
     /// - Parameters:
     ///   - userProvider: A shared user provider instance to handle auth logic.
     ///   - onSignIn: A closure that switches to the sign-in view.
-    init(userProvider: UserProvider, onSignIn: @escaping () -> Void) {
+    init(userProvider: UserProvider, onSignIn: @escaping () -> Void, userAuthenticated: @escaping () -> Void) {
         self.userProvider = userProvider
         _viewModel = .init(wrappedValue: .init(userProvider: userProvider))
         self.onSignIn = onSignIn
+        self.userAuthenticated = userAuthenticated
     }
     
     var body: some View {
@@ -80,11 +88,14 @@ struct SignUpView: View {
                 VerifyOTPView(
                     title: "Check your email",
                     subtitle: "to continue with sign up",
-                    userProvider: userProvider
+                    userProvider: userProvider,
+                    databaseManager: databaseManager
                 ) {
                     withAnimation {
                         viewModel.isVerifying = false
                     }
+                } onVerificationSuccess: {
+                    userAuthenticated()
                 }
                 .transition(.slide.combined(with: .opacity))
             } else {
@@ -99,7 +110,10 @@ struct SignUpView: View {
                     
                     VStack {
                         SocialSignInView {
-                            Task { await viewModel.signUpWithGoogle() }
+                            Task {
+                                await viewModel.signUpWithGoogle()
+                                userAuthenticated()
+                            }
                         }
                         .padding([.top, .horizontal])
                         
@@ -138,5 +152,12 @@ struct SignUpView: View {
 }
 
 #Preview {
-    SignUpView(userProvider: ClerkUserProvider()) { }
+    SignUpView(userProvider: ClerkUserProvider()) { } userAuthenticated: { }
+        .environment(
+            DatabaseManager(
+                databaseHandler: DatabaseHandlerImpl(
+                    database: InMemoryDatabase()
+                )
+            )
+        )
 }

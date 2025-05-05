@@ -12,22 +12,18 @@ import SwiftUI
 /// This view displays the `DashboardView`, `TransactionsView`, and `InsightsView`
 /// as separate tabs, allowing users to switch between core sections of the app.
 struct ContentView: View {
+    @Environment(\.userProvider) private var userProvider
+    
+    /// The environment-injected instance of `DatabaseManager`.
+    ///
+    /// This is used to interact with the current database implementation,
+    /// which may be local, in-memory, or Firebase-based depending on the selected `DatabaseType`.
+    @Environment(DatabaseManager.self) var databaseManager
     
     /// The `TabManager` is injected from the environment and used to track the currently selected tab index.
     @EnvironmentObject var tabManager: TabManager
     
-    /// The `databaseManager` handles all interactions with the data layer, such as reading from or writing to the local database.
-    ///
-    /// It's initialized with a default implementation using `DatabaseManager` and `DatabaseHandlerImpl`,
-    /// but can be injected with a custom instance for testing or previewing.
-    private let databaseManager: DatabaseQueryType
-    
-    /// Initializes the `ContentView` with a `databaseManager`.
-    ///
-    /// - Parameter databaseManager: The object that conforms to `DatabaseQueryType` for managing database operations.
-    init(databaseManager: DatabaseQueryType = DatabaseManager(databaseHandler: DatabaseHandlerImpl())) {
-        self.databaseManager = databaseManager
-    }
+    @State private var isLoading = false
     
     /// The body of the `ContentView`, which defines a `TabView` to display multiple sections of the app.
     ///
@@ -59,10 +55,32 @@ struct ContentView: View {
                 }
                 .tag(2)
         }
+        // Automatically switch database type based on user state
+        /*.onChange(of: userProvider.user) { _, newValue in
+            if let user = newValue {
+                // User signed in – start syncing to Firebase
+                isLoading = true
+                UserDefaults.standard.databaseType = .firebase(user.id)
+                UserDefaults.standard.isSignedIn = true
+                databaseManager.initializeRemoteDatabaseHandler(DatabaseHandlerImpl(database: FirebaseDatabase(userId: user.id)))
+                Task.detached {
+                    await databaseManager.syncLocalWithRemote()
+                    await databaseManager.syncRemoteWithLocal()
+                }
+                isLoading = false
+            } else {
+                // User signed out – stop syncing to Firebase
+                UserDefaults.standard.databaseType = .local
+                UserDefaults.standard.isSignedIn = false
+                databaseManager.deinitializeRemoteDatabaseHandler()
+            }
+        }
+        .progressHUD(isShowing: $isLoading, title: .constant("Syncing..."))*/
     }
 }
 
 #Preview {
-    ContentView(databaseManager: DatabaseManager(databaseHandler: DatabaseHandlerImpl(database: InMemoryDatabase())))
+    ContentView()
         .environmentObject(TabManager())
+        .environment(DatabaseManager(databaseHandler: DatabaseHandlerImpl(database: InMemoryDatabase())))
 }

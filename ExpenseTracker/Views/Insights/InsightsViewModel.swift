@@ -40,13 +40,13 @@ extension InsightsView {
         // MARK: - Private Properties
         
         /// The database manager responsible for fetching income and expense data.
-        private let databaseManager: DatabaseQueryType
+        private let databaseManager: DatabaseManager
         
         // MARK: - Initialization
         
         /// Initializes the ViewModel with a given database manager.
         /// - Parameter databaseManager: The data provider for incomes and expenses.
-        init(databaseManager: DatabaseQueryType) {
+        init(databaseManager: DatabaseManager) {
             self.databaseManager = databaseManager
         }
         
@@ -54,65 +54,55 @@ extension InsightsView {
         
         /// Fetches income records from the database, filters them by the current month,
         /// and groups them by `Source` to prepare chart data.
-        func fetchIncomes() {
-            databaseManager.fetchIncomes { [weak self] result in
-                guard let self else { return }
+        func fetchIncomes() async {
+            do {
+                let incomes = try await databaseManager.fetchIncomes()
+                incomeList = [] // Reset list before adding fresh items
                 
-                switch result {
-                case .success(let incomes):
-                    incomeList = [] // Reset list before adding fresh items
-                    
-                    let filteredIncomes = incomes.filter {
-                        $0.formattedDate
-                            .formattedString(dateFormat: "MMMM yyyy")
-                            .localizedCaseInsensitiveContains(self.currentMonth)
-                    }
-                    
-                    // Group and sum by source
-                    Source.allCases.forEach { source in
-                        let incomeBySource = filteredIncomes.filter { $0.source == source }
-                        if !incomeBySource.isEmpty {
-                            let total = incomeBySource.reduce(0) { $0 + $1.amount }
-                            self.incomeList.append(.init(amount: total, source: source))
-                        }
-                    }
-                    
-                case .failure(let error):
-                    showError = true
-                    errorMessage = error.localizedDescription
+                let filteredIncomes = incomes.filter {
+                    $0.formattedDate
+                        .formattedString(dateFormat: "MMMM yyyy")
+                        .localizedCaseInsensitiveContains(self.currentMonth)
                 }
+                
+                // Group and sum by source
+                Source.allCases.forEach { source in
+                    let incomeBySource = filteredIncomes.filter { $0.source == source }
+                    if !incomeBySource.isEmpty {
+                        let total = incomeBySource.reduce(0) { $0 + $1.amount }
+                        self.incomeList.append(.init(amount: total, source: source))
+                    }
+                }
+            } catch {
+                showError = true
+                errorMessage = error.localizedDescription
             }
         }
         
         /// Fetches expense records from the database, filters them by the current month,
         /// and groups them by `Category` to prepare chart data.
-        func fetchExpenses() {
-            databaseManager.fetchExpenses { [weak self] result in
-                guard let self else { return }
+        func fetchExpenses() async {
+            do {
+                let expenses = try await databaseManager.fetchExpenses()
+                expenseList = [] // Reset list before adding fresh items
                 
-                switch result {
-                case .success(let expenses):
-                    expenseList = [] // Reset list before adding fresh items
-                    
-                    let filteredExpenses = expenses.filter {
-                        $0.formattedDate
-                            .formattedString(dateFormat: "MMMM yyyy")
-                            .localizedCaseInsensitiveContains(self.currentMonth)
-                    }
-                    
-                    // Group and sum by category
-                    Category.allCases.forEach { category in
-                        let expenseByCategory = filteredExpenses.filter { $0.category == category }
-                        if !expenseByCategory.isEmpty {
-                            let total = expenseByCategory.reduce(0) { $0 + $1.amount }
-                            self.expenseList.append(.init(amount: total, category: category))
-                        }
-                    }
-                    
-                case .failure(let error):
-                    showError = true
-                    errorMessage = error.localizedDescription
+                let filteredExpenses = expenses.filter {
+                    $0.formattedDate
+                        .formattedString(dateFormat: "MMMM yyyy")
+                        .localizedCaseInsensitiveContains(self.currentMonth)
                 }
+                
+                // Group and sum by category
+                Category.allCases.forEach { category in
+                    let expenseByCategory = filteredExpenses.filter { $0.category == category }
+                    if !expenseByCategory.isEmpty {
+                        let total = expenseByCategory.reduce(0) { $0 + $1.amount }
+                        self.expenseList.append(.init(amount: total, category: category))
+                    }
+                }
+            } catch {
+                showError = true
+                errorMessage = error.localizedDescription
             }
         }
     }

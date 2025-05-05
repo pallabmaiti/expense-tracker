@@ -17,7 +17,7 @@ struct AddIncomeView: View {
     var onSave: (() -> Void)
     
     // Initializer for the view, taking the databaseManager and onSave closure as parameters.
-    init(databaseManager: DatabaseQueryType, onSave: @escaping () -> Void) {
+    init(databaseManager: DatabaseManager, onSave: @escaping () -> Void) {
         _viewModel = State(initialValue: .init(databaseManager: databaseManager))
         self.onSave = onSave
     }
@@ -75,7 +75,8 @@ struct AddIncomeView: View {
     }
 
     func addIncome() {
-        viewModel.addIncome { success in
+        Task {
+            let success = await viewModel.addIncome()
             if success {
                 onSave()  // Notify parent view to refresh data
                 dismiss() // Dismiss the AddIncomeView

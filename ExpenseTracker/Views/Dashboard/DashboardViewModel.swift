@@ -57,74 +57,62 @@ extension DashboardView {
         // MARK: - Private Properties
 
         /// The database manager that handles the database operations.
-        private let databaseManager: DatabaseQueryType
+        private let databaseManager: DatabaseManager
         
         /// Initializes the ViewModel with a given database manager.
-        init(databaseManager: DatabaseQueryType) {
+        init(databaseManager: DatabaseManager) {
             self.databaseManager = databaseManager
         }
         
         // MARK: - Public Methods
 
         /// Fetches the expenses from the database.
-        func fetchExpenses() {
-            databaseManager.fetchExpenses { [weak self] result in
-                guard let self else { return }
-                switch result {
-                case .success(let expenses):
-                    let filteredExpenses = expenses.filterByCurrentMonth()
-                    expenseList = filteredExpenses.sorted(by: .date, isDescending: true)
-                case .failure(let error):
-                    showError = true
-                    errorMessage = error.localizedDescription
-                }
+        func fetchExpenses() async {
+            do {
+                let expenses = try await databaseManager.fetchExpenses()
+                let filteredExpenses = expenses.filterByCurrentMonth()
+                expenseList = filteredExpenses.sorted(by: .date, isDescending: true)
+            } catch {
+                showError = true
+                errorMessage = error.localizedDescription
             }
         }
         
         /// Fetches the incomes from the database.
-        func fetchIncomes() {
-            databaseManager.fetchIncomes { [weak self] result in
-                guard let self else { return }
-                switch result {
-                case .success(let incomes):
-                    let filteredIncomes = incomes.filterByCurrentMonth()
-                    incomeList = filteredIncomes.sorted(by: .date, isDescending: true)
-                case .failure(let error):
-                    showError = true
-                    errorMessage = error.localizedDescription
-                }
+        func fetchIncomes() async {
+            do {
+                let incomes = try await databaseManager.fetchIncomes()
+                let filteredIncomes = incomes.filterByCurrentMonth()
+                incomeList = filteredIncomes.sorted(by: .date, isDescending: true)
+            } catch {
+                showError = true
+                errorMessage = error.localizedDescription
             }
         }
         
         /// Deletes an expense by its identifier.
         /// - Parameters:
         ///   - id: The identifier of the expense to be deleted.
-        func deleteExpense(id: String) {
-            databaseManager.deleteExpense(id: id) { [weak self] result in
-                guard let self else { return }
-                switch result {
-                case .success:
-                    fetchExpenses()
-                case .failure(let error):
-                    showError.toggle()
-                    errorMessage = error.localizedDescription
-                }
+        func deleteExpense(id: String) async {
+            do {
+                _ = try await databaseManager.deleteExpense(id: id)
+                await fetchExpenses()
+            } catch {
+                showError = true
+                errorMessage = error.localizedDescription
             }
         }
         
         /// Deletes an income by its identifier.
         /// - Parameters:
         ///   - id: The identifier of the income to be deleted.
-        func deleteIncome(id: String) {
-            databaseManager.deleteIncome(id: id) { [weak self] result in
-                guard let self else { return }
-                switch result {
-                case .success:
-                    fetchIncomes()
-                case .failure(let error):
-                    showError.toggle()
-                    errorMessage = error.localizedDescription
-                }
+        func deleteIncome(id: String) async {
+            do {
+                _ = try await databaseManager.deleteIncome(id: id)
+                await fetchIncomes()
+            } catch {
+                showError = true
+                errorMessage = error.localizedDescription
             }
         }
         

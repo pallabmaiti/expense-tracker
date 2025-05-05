@@ -5,7 +5,17 @@
 //  Created by Pallab Maiti on 27/03/25.
 //
 
+import FirebaseCore
 import SwiftUI
+
+class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(_ application: UIApplication,
+                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+        FirebaseApp.configure()
+        
+        return true
+    }
+}
 
 /// The main entry point of the Expense Tracker application.
 ///
@@ -22,6 +32,8 @@ struct ExpenseTrackerApp: App {
     /// It's marked with `@State` to maintain its lifecycle and ensure it stays alive across view updates.
     /// It's injected into the environment so any view in the app hierarchy can access and modify it.
     @State private var tabManager = TabManager()
+    
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     
     /// The body that defines the scene (UI container) for the app.
     ///

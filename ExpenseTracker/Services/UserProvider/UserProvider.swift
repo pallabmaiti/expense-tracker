@@ -24,7 +24,7 @@ enum UserProviderError: Error {
 
 /// Represents a user model conforming to `Identifiable` and `Codable` protocols.
 /// Used for storing and presenting user-related information in the app.
-struct User: Identifiable, Codable {
+struct User: Identifiable, Codable, Equatable {
     var id: String
     var email: String?
     var firstName: String?
@@ -39,9 +39,6 @@ struct User: Identifiable, Codable {
 /// - Note: Marked with `@MainActor` since most operations affect UI-related state.
 @MainActor
 protocol UserProvider {
-    
-    /// Indicates whether a user-related operation (e.g., sign-in, verification) is currently in progress.
-    var isLoading: Bool { get }
     
     /// The currently authenticated user, or `nil` if no user is signed in.
     var user: User? { get }
@@ -127,12 +124,16 @@ class ClerkUserProvider: UserProvider {
     /// Loads the Clerk SDK and prepares it to provide user session data.
     func load() async throws {
         try await clerk.load()
+        if isLoaded {
+            if user != nil {
+                UserDefaults.standard.isSignedIn = true
+            }
+        }
     }
     
     /// Starts the email-based sign-in flow using the Clerk SDK.
     /// - Parameter email: The email address the user provides for authentication.
     func signIn(email: String) async throws(UserProviderError) {
-        isLoading = true
         do {
             // Initiate a sign-in attempt with email strategy.
             let signIn = try await SignIn.create(strategy: .identifier(email))
@@ -150,12 +151,10 @@ class ClerkUserProvider: UserProvider {
                 throw UserProviderError.error(error.localizedDescription)
             }
         }
-        isLoading = false
     }
     
     /// Resends the OTP code to the user's email in case it was not received or expired.
     func resendOTP() async throws(UserProviderError) {
-        isLoading = true
         do {
             // Ensure that the sign-in session exists.
             guard let signIn = clerk.client?.signIn else { return }
@@ -170,13 +169,11 @@ class ClerkUserProvider: UserProvider {
                 throw UserProviderError.error(error.localizedDescription)
             }
         }
-        isLoading = false
     }
     
     /// Verifies the OTP code entered by the user during the sign-in process.
     /// - Parameter code: The verification code received in the user's email.
     func verifyOTP(_ code: String) async throws(UserProviderError) {
-        isLoading = true
         do {
             guard let signIn = clerk.client?.signIn else { return }
             
@@ -189,12 +186,10 @@ class ClerkUserProvider: UserProvider {
                 throw UserProviderError.error(error.localizedDescription)
             }
         }
-        isLoading = false
     }
     
     /// Initiates the OAuth-based sign-in flow with Google using Clerk SDK.
     func signInWithGoogle() async throws(UserProviderError) {
-        isLoading = true
         do {
             let signIn = try await SignIn.create(strategy: .oauth(provider: .google))
             
@@ -207,7 +202,6 @@ class ClerkUserProvider: UserProvider {
                 throw UserProviderError.error(error.localizedDescription)
             }
         }
-        isLoading = false
     }
     
     /// Registers a new user by creating a Clerk sign-up session with provided details.
@@ -216,7 +210,6 @@ class ClerkUserProvider: UserProvider {
     ///   - firstName: The user's first name.
     ///   - lastName: The user's last name.
     func signUp(emailAddress: String, firstName: String, lastName: String) async throws(UserProviderError) {
-        isLoading = true
         do {
             // Create a sign-up request with basic info and email strategy.
             let signUp = try await SignUp.create(
@@ -236,12 +229,10 @@ class ClerkUserProvider: UserProvider {
                 throw UserProviderError.error(error.localizedDescription)
             }
         }
-        isLoading = false
     }
     
     /// Signs out the currently signed-in user and clears their session.
     func signOut() async throws(UserProviderError) {
-        isLoading = true
         do {
             try await clerk.signOut()
         } catch {
@@ -251,6 +242,5 @@ class ClerkUserProvider: UserProvider {
                 throw UserProviderError.error(error.localizedDescription)
             }
         }
-        isLoading = false
     }
 }
