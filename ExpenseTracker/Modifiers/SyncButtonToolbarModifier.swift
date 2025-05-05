@@ -10,7 +10,7 @@ import SwiftUI
 /// A `ViewModifier` that adds a toolbar button to the top leading corner,
 /// enabling user sign-in/sign-out and syncing data with a selected database source.
 struct ToolbarSyncButtonModifier: ViewModifier {
-    @Environment(\.userProvider) private var userProvider
+    @Environment(\.authenticator) private var authenticator
     @Environment(DatabaseManager.self) private var databaseManager
     
     @State private var isPresented = false
@@ -35,10 +35,10 @@ struct ToolbarSyncButtonModifier: ViewModifier {
             .sheet(isPresented: $isPresented, content: {
                 if UserDefaults.standard.isSignedIn {
                     VStack {
-                        Text("Hello \(userProvider.user?.email ?? "User")")
+                        Text("Hello \(authenticator.user?.email ?? "User")")
                         Button("Sign out") {
                             Task {
-                                try? await userProvider.signOut()
+                                try? authenticator.signOut()
                                 UserDefaults.standard.databaseType = .local
                                 UserDefaults.standard.isSignedIn = false
                                 databaseManager.deinitializeRemoteDatabaseHandler()

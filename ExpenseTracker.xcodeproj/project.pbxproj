@@ -7,7 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		ED621E162DB2434300369112 /* Clerk in Frameworks */ = {isa = PBXBuildFile; productRef = ED621E152DB2434300369112 /* Clerk */; };
+		ED9163152DC88A9600B02DAB /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = ED9163142DC88A9600B02DAB /* FirebaseAuth */; };
+		ED91631C2DC8B2C800B02DAB /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = ED91631B2DC8B2C800B02DAB /* GoogleSignIn */; };
+		ED91631E2DC8B2C800B02DAB /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = ED91631D2DC8B2C800B02DAB /* GoogleSignInSwift */; };
 		EDBE87F72DB8E82A00D27A7F /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = EDBE87F62DB8E82A00D27A7F /* FirebaseCore */; };
 		EDBE87F92DB8E82A00D27A7F /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = EDBE87F82DB8E82A00D27A7F /* FirebaseFirestore */; };
 		EDBE87FB2DB8E82A00D27A7F /* FirebaseFirestoreCombine-Community in Frameworks */ = {isa = PBXBuildFile; productRef = EDBE87FA2DB8E82A00D27A7F /* FirebaseFirestoreCombine-Community */; };
@@ -33,6 +35,8 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
+				Views/SignInOrSignUp/Common/VerifyOTP/VerifyOTPView.swift,
+				Views/SignInOrSignUp/Common/VerifyOTP/VerifyOTPViewModel.swift,
 			);
 			target = ED21E98D2D95286200DC60F1 /* ExpenseTracker */;
 		};
@@ -60,9 +64,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				EDBE87F72DB8E82A00D27A7F /* FirebaseCore in Frameworks */,
+				ED9163152DC88A9600B02DAB /* FirebaseAuth in Frameworks */,
+				ED91631E2DC8B2C800B02DAB /* GoogleSignInSwift in Frameworks */,
 				EDBE87FB2DB8E82A00D27A7F /* FirebaseFirestoreCombine-Community in Frameworks */,
-				ED621E162DB2434300369112 /* Clerk in Frameworks */,
 				EDBE87F92DB8E82A00D27A7F /* FirebaseFirestore in Frameworks */,
+				ED91631C2DC8B2C800B02DAB /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -81,6 +87,7 @@
 			children = (
 				ED21E9902D95286200DC60F1 /* ExpenseTracker */,
 				ED73E0192DAF7E0300F2092A /* ExpenseTrackerTests */,
+				ED9163132DC88A9600B02DAB /* Frameworks */,
 				ED21E98F2D95286200DC60F1 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -92,6 +99,13 @@
 				ED73E0182DAF7E0300F2092A /* ExpenseTrackerTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		ED9163132DC88A9600B02DAB /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -114,10 +128,12 @@
 			);
 			name = ExpenseTracker;
 			packageProductDependencies = (
-				ED621E152DB2434300369112 /* Clerk */,
 				EDBE87F62DB8E82A00D27A7F /* FirebaseCore */,
 				EDBE87F82DB8E82A00D27A7F /* FirebaseFirestore */,
 				EDBE87FA2DB8E82A00D27A7F /* FirebaseFirestoreCombine-Community */,
+				ED9163142DC88A9600B02DAB /* FirebaseAuth */,
+				ED91631B2DC8B2C800B02DAB /* GoogleSignIn */,
+				ED91631D2DC8B2C800B02DAB /* GoogleSignInSwift */,
 			);
 			productName = ExpenseTracker;
 			productReference = ED21E98E2D95286200DC60F1 /* ExpenseTracker.app */;
@@ -175,8 +191,8 @@
 			mainGroup = ED21E9852D95286200DC60F1;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				ED621E142DB2434300369112 /* XCRemoteSwiftPackageReference "clerk-ios" */,
 				EDBE87F52DB8E82A00D27A7F /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				ED91631A2DC8B2C800B02DAB /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = ED21E98F2D95286200DC60F1 /* Products */;
@@ -504,12 +520,12 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		ED621E142DB2434300369112 /* XCRemoteSwiftPackageReference "clerk-ios" */ = {
+		ED91631A2DC8B2C800B02DAB /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/clerk/clerk-ios";
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 0.55.0;
+				minimumVersion = 8.0.0;
 			};
 		};
 		EDBE87F52DB8E82A00D27A7F /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
@@ -523,10 +539,20 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		ED621E152DB2434300369112 /* Clerk */ = {
+		ED9163142DC88A9600B02DAB /* FirebaseAuth */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = ED621E142DB2434300369112 /* XCRemoteSwiftPackageReference "clerk-ios" */;
-			productName = Clerk;
+			package = EDBE87F52DB8E82A00D27A7F /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		ED91631B2DC8B2C800B02DAB /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = ED91631A2DC8B2C800B02DAB /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		ED91631D2DC8B2C800B02DAB /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = ED91631A2DC8B2C800B02DAB /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
 		};
 		EDBE87F62DB8E82A00D27A7F /* FirebaseCore */ = {
 			isa = XCSwiftPackageProductDependency;

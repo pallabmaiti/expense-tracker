@@ -12,8 +12,6 @@ import SwiftUI
 /// This view displays the `DashboardView`, `TransactionsView`, and `InsightsView`
 /// as separate tabs, allowing users to switch between core sections of the app.
 struct ContentView: View {
-    @Environment(\.userProvider) private var userProvider
-    
     /// The environment-injected instance of `DatabaseManager`.
     ///
     /// This is used to interact with the current database implementation,

@@ -17,7 +17,17 @@ struct SocialSignInView: View {
     var body: some View {
         VStack {
             /// Custom-styled button for Google Sign-In.
-            SecondaryButton("Sign in with Google", action: onGoogleSignIn)
+            
+            Button(action: onGoogleSignIn) {
+                Text("Sign in with Google")
+                    .padding(.vertical, 8)
+                    .frame(maxWidth: .infinity)
+                    .background(alignment: .leading) {
+                        Image("Google")
+                            .frame(width: 30, alignment: .center)
+                    }
+            }
+            .buttonStyle(.bordered)
             
             /// Visual divider with "or" text to separate social and manual sign-in options.
             HStack(spacing: 20) {

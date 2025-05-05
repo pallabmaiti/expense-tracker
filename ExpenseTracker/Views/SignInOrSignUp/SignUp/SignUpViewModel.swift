@@ -12,15 +12,12 @@ extension SignUpView {
     @Observable
     class ViewModel {
         // MARK: - User Input
-        
-        /// User's first name input from the sign-up form.
-        var firstName: String = ""
-        
-        /// User's last name input from the sign-up form.
-        var lastName: String = ""
-        
+                
         /// User's email input from the sign-up form.
         var email: String = ""
+        
+        /// User's password from sign-up form.
+        var password: String = ""
         
         // MARK: - State Properties
         
@@ -34,14 +31,19 @@ extension SignUpView {
         var showError: Bool = false
         
         /// The user provider responsible for sign-up and authentication requests.
-        var userProvider: UserProvider
+        var authenticator: Authenticator
         
         // MARK: - Initialization
         
         /// Initializes the view model with the given user provider.
-        /// - Parameter userProvider: The shared instance responsible for performing auth operations.
-        init(userProvider: UserProvider) {
-            self.userProvider = userProvider
+        /// - Parameter authenticator: The shared instance responsible for performing auth operations.
+        init(authenticator: Authenticator) {
+            self.authenticator = authenticator
+            
+#if DEBUG
+            email = "mynamepallabmaiti@gmail.com"
+            password = "123456"
+#endif
         }
         
         // MARK: - Sign Up Actions
@@ -50,10 +52,10 @@ extension SignUpView {
         /// Displays an error alert if the process fails.
         func signUpWithGoogle() async {
             do {
-                try await userProvider.signInWithGoogle()
+                try await authenticator.signInWithGoogle()
             } catch {
                 showError = true
-                errorMessage = error.localizedErrorMessage
+                errorMessage = error.localizedDescription
             }
         }
         
@@ -61,15 +63,14 @@ extension SignUpView {
         /// Transitions to OTP verification on success.
         func signUp() async {
             do {
-                try await userProvider.signUp(
-                    emailAddress: email,
-                    firstName: firstName,
-                    lastName: lastName
+                try await authenticator.signUp(
+                    email: email,
+                    password: password
                 )
                 isVerifying = true
             } catch {
                 showError = true
-                errorMessage = error.localizedErrorMessage
+                errorMessage = error.localizedDescription
             }
         }
     }
