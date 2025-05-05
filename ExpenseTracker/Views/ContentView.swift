@@ -56,14 +56,14 @@ struct ContentView: View {
                 .tag(2)
         }
         // Automatically switch database type based on user state
-        .onChange(of: userProvider.user) { _, newValue in
+        /*.onChange(of: userProvider.user) { _, newValue in
             if let user = newValue {
                 // User signed in – start syncing to Firebase
                 isLoading = true
                 UserDefaults.standard.databaseType = .firebase(user.id)
                 UserDefaults.standard.isSignedIn = true
                 databaseManager.initializeRemoteDatabaseHandler(DatabaseHandlerImpl(database: FirebaseDatabase(userId: user.id)))
-                Task {
+                Task.detached {
                     await databaseManager.syncLocalWithRemote()
                     await databaseManager.syncRemoteWithLocal()
                 }
@@ -75,7 +75,7 @@ struct ContentView: View {
                 databaseManager.deinitializeRemoteDatabaseHandler()
             }
         }
-        .progressHUD(isShowing: $isLoading, title: .constant("Syncing..."))
+        .progressHUD(isShowing: $isLoading, title: .constant("Syncing..."))*/
     }
 }
 

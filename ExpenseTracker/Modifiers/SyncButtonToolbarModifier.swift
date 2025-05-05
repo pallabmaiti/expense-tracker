@@ -14,6 +14,8 @@ struct ToolbarSyncButtonModifier: ViewModifier {
     @Environment(DatabaseManager.self) private var databaseManager
     
     @State private var isPresented = false
+        
+    var userAuthenticated: (() -> Void)
 
     /// The body of the modified view, injecting a toolbar with a sign-in/out button
     /// and handling database switching logic based on user session state.
@@ -37,11 +39,16 @@ struct ToolbarSyncButtonModifier: ViewModifier {
                         Button("Sign out") {
                             Task {
                                 try? await userProvider.signOut()
+                                UserDefaults.standard.databaseType = .local
+                                UserDefaults.standard.isSignedIn = false
+                                databaseManager.deinitializeRemoteDatabaseHandler()
                             }
                         }
                     }
                 } else {
-                    SignInOrSignUpView()
+                    SignInOrSignUpView() {
+                        userAuthenticated()
+                    }
                 }
             })
     }
@@ -52,7 +59,7 @@ extension View {
     ///
     /// This adds a person icon to the top leading corner, allowing user authentication
     /// and syncing between local and Firebase databases.
-    func toolbarSyncButton() -> some View {
-        self.modifier(ToolbarSyncButtonModifier())
+    func toolbarSyncButton(userAuthenticated: @escaping () -> Void) -> some View {
+        self.modifier(ToolbarSyncButtonModifier(userAuthenticated: userAuthenticated))
     }
 }

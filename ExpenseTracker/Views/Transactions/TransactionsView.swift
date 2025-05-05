@@ -142,7 +142,12 @@ struct TransactionsView: View {
             .padding(0)
             .searchable(text: $viewModel.searchText, prompt: "Search for a transaction")
             .navigationTitle("Transactions")
-            .toolbarSyncButton()
+            .toolbarSyncButton() {
+                Task {
+                    await viewModel.fetchExpenses()
+                    await viewModel.fetchIncomes()
+                }
+            }
             .task {
                 /// On view load, clear existing data and fetch transactions from database.
                 Task {

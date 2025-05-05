@@ -136,7 +136,12 @@ struct DashboardView: View {
                     }
                 }
             }
-            .toolbarSyncButton()
+            .toolbarSyncButton() {
+                Task {
+                    await viewModel.fetchExpenses()
+                    await viewModel.fetchIncomes()
+                }
+            }
             .sheet(isPresented: $viewModel.showAddExpense) {
                 AddExpenseView(databaseManager: databaseManager) {
                     Task {

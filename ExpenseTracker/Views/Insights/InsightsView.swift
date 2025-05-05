@@ -172,7 +172,12 @@ struct InsightsView: View {
                 }
             }
             .navigationTitle("Insights")
-            .toolbarSyncButton()
+            .toolbarSyncButton() {
+                Task {
+                    await viewModel.fetchExpenses()
+                    await viewModel.fetchIncomes()
+                }
+            }
             .task {
                 Task {
                     // Fetch data when view appears

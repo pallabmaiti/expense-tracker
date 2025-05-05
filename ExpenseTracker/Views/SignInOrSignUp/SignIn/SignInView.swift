@@ -23,14 +23,17 @@ struct SignInView: View {
     /// A closure executed when the user taps "Sign up".
     var onSignUp: () -> Void
 
+    var userAuthenticated: (() -> Void)
+    
     /// Initializes the `SignInView` with a user provider and sign-up callback.
     /// - Parameters:
     ///   - userProvider: The provider handling sign-in operations.
     ///   - onSignUp: A closure triggered when the user selects sign-up.
-    init(userProvider: UserProvider, onSignUp: @escaping () -> Void) {
+    init(userProvider: UserProvider, onSignUp: @escaping () -> Void, userAuthenticated: @escaping () -> Void) {
         self.userProvider = userProvider
         self._viewModel = .init(wrappedValue: .init(userProvider: userProvider))
         self.onSignUp = onSignUp
+        self.userAuthenticated = userAuthenticated
     }
     
     var body: some View {
@@ -45,7 +48,7 @@ struct SignInView: View {
                     viewModel.isVerifying = false
                 }
             } onVerificationSuccess: {
-                dismiss()
+                userAuthenticated()
             }
             .transition(.slide.combined(with: .opacity))
         } else {
@@ -63,7 +66,7 @@ struct SignInView: View {
                 SocialSignInView() {
                     Task {
                         await viewModel.signInWithGoogle()
-                        dismiss()
+                        userAuthenticated()
                     }
                 }
                 .padding(.top)
@@ -106,7 +109,7 @@ struct SignInView: View {
 }
 
 #Preview {
-    SignInView(userProvider: ClerkUserProvider()) { }
+    SignInView(userProvider: ClerkUserProvider()) { } userAuthenticated: { }
         .environment(
             DatabaseManager(
                 databaseHandler: DatabaseHandlerImpl(

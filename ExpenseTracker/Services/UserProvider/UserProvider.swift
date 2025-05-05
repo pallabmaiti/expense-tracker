@@ -124,6 +124,11 @@ class ClerkUserProvider: UserProvider {
     /// Loads the Clerk SDK and prepares it to provide user session data.
     func load() async throws {
         try await clerk.load()
+        if isLoaded {
+            if user != nil {
+                UserDefaults.standard.isSignedIn = true
+            }
+        }
     }
     
     /// Starts the email-based sign-in flow using the Clerk SDK.
