@@ -10,12 +10,15 @@ import Foundation
 extension SignInView {
     /// ViewModel for handling sign-in logic and state for `SignInView`.
     ///
-    /// Supports both email-based sign-in and Google OAuth sign-in using `UserProvider`.
+    /// Supports both email-based sign-in and Google OAuth sign-in using `Authenticator`.
     @Observable
     class ViewModel {
         
         /// Email address input from the user.
         var email: String = ""
+        
+        /// Password from the user.
+        var password: String = ""
         
         /// Error message to display in case of failure.
         var errorMessage: String = ""
@@ -27,11 +30,15 @@ extension SignInView {
         var showError: Bool = false
         
         /// User provider instance for authentication actions.
-        var userProvider: UserProvider
+        var authenticator: Authenticator
         
-        /// Initializes the view model with a `UserProvider`.
-        init(userProvider: UserProvider) {
-            self.userProvider = userProvider
+        /// Initializes the view model with a `Authenticator`.
+        init(authenticator: Authenticator) {
+            self.authenticator = authenticator
+#if DEBUG
+            email = "mynamepallabmaiti@gmail.com"
+            password = "12345678"
+#endif
         }
         
         /// Initiates Google OAuth sign-in flow.
@@ -39,10 +46,10 @@ extension SignInView {
         /// If the sign-in fails, sets appropriate error state.
         func signInWithGoogle() async {
             do {
-                try await userProvider.signInWithGoogle()
+                try await authenticator.signInWithGoogle()
             } catch {
                 showError = true
-                errorMessage = error.localizedErrorMessage
+                errorMessage = error.localizedDescription
             }
         }
         
@@ -51,11 +58,11 @@ extension SignInView {
         /// If the sign-in fails, sets appropriate error state.
         func signIn() async {
             do {
-                try await userProvider.signIn(email: email)
+                try await authenticator.signIn(email: email, password: password)
                 isVerifying = true
             } catch {
                 showError = true
-                errorMessage = error.localizedErrorMessage
+                errorMessage = error.localizedDescription
             }
         }
     }

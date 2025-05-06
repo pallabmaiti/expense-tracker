@@ -18,7 +18,7 @@ struct SignInView: View {
     @State private var viewModel: ViewModel
 
     /// The user provider handling authentication logic.
-    var userProvider: UserProvider
+    var authenticator: Authenticator
 
     /// A closure executed when the user taps "Sign up".
     var onSignUp: () -> Void
@@ -27,65 +27,48 @@ struct SignInView: View {
     
     /// Initializes the `SignInView` with a user provider and sign-up callback.
     /// - Parameters:
-    ///   - userProvider: The provider handling sign-in operations.
+    ///   - authenticator: The provider handling sign-in operations.
     ///   - onSignUp: A closure triggered when the user selects sign-up.
-    init(userProvider: UserProvider, onSignUp: @escaping () -> Void, userAuthenticated: @escaping () -> Void) {
-        self.userProvider = userProvider
-        self._viewModel = .init(wrappedValue: .init(userProvider: userProvider))
+    init(authenticator: Authenticator, onSignUp: @escaping () -> Void, userAuthenticated: @escaping () -> Void) {
+        self.authenticator = authenticator
+        self._viewModel = .init(wrappedValue: .init(authenticator: authenticator))
         self.onSignUp = onSignUp
         self.userAuthenticated = userAuthenticated
     }
     
     var body: some View {
-        if viewModel.isVerifying {
-            VerifyOTPView(
-                title: "Check your email",
-                subtitle: "to continue with sign in",
-                userProvider: userProvider,
-                databaseManager: databaseManager
-            ) {
-                withAnimation {
-                    viewModel.isVerifying = false
-                }
-            } onVerificationSuccess: {
-                userAuthenticated()
-            }
-            .transition(.slide.combined(with: .opacity))
-        } else {
+        VStack {
+            Text("Welcome back!")
+                .font(.title)
+                .fontWeight(.bold)
+                .padding(.top, 20)
+                .lineLimit(1)
+            Text("Please sign in to continue")
+                .font(.title3)
+                .lineLimit(1)
+                .minimumScaleFactor(0.9)
+            
             VStack {
-                Text("Welcome back!")
-                    .font(.title)
-                    .fontWeight(.bold)
-                    .padding(.top, 20)
-                    .lineLimit(1)
-                Text("Please sign in to continue")
-                    .font(.title3)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.9)
-                
                 SocialSignInView() {
                     Task {
                         await viewModel.signInWithGoogle()
                         userAuthenticated()
                     }
                 }
-                .padding(.top)
+                .padding([.top, .horizontal])
                 
-                TextField("Email", text: $viewModel.email)
-                    .keyboardType(.emailAddress)
-                    .textInputAutocapitalization(.never)
-                    .padding()
-                    .background(.secondary.opacity(0.2))
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                    .cornerRadius(10)
-                    .padding(.top, 20)
-                
-                
-                PrimaryButton("Send OTP", isEnabled: !viewModel.email.isEmpty) {
-                    Task { await viewModel.signIn() }
+                EmailPasswordForm(
+                    email: $viewModel.email,
+                    password: $viewModel.password,
+                    buttonLabel: "Sign In"
+                ) {
+                    Task {
+                        await viewModel.signIn()
+                        userAuthenticated()
+                    }
                 }
-                .padding(.top, 30)
-                
+                .padding()
+                                
                 HStack {
                     Text("Don't have an account?")
                     
@@ -93,23 +76,21 @@ struct SignInView: View {
                     
                     Spacer()
                 }
-                .padding(.vertical)
-                
-                Spacer()
+                .padding(.horizontal)
             }
-            .padding()
-            .transition(.slide.combined(with: .opacity))
-            .alert("Error", isPresented: $viewModel.showError) {
-                Button("Ok") { }
-            } message: {
-                Text(viewModel.errorMessage)
-            }
+            Spacer()
+        }
+        .transition(.slide.combined(with: .opacity))
+        .alert("Error", isPresented: $viewModel.showError) {
+            Button("Ok") { }
+        } message: {
+            Text(viewModel.errorMessage)
         }
     }
 }
 
 #Preview {
-    SignInView(userProvider: ClerkUserProvider()) { } userAuthenticated: { }
+    SignInView(authenticator: FirebaseAuthenticator()) { } userAuthenticated: { }
         .environment(
             DatabaseManager(
                 databaseHandler: DatabaseHandlerImpl(

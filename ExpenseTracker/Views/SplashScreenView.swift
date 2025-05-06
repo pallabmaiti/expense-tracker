@@ -18,13 +18,20 @@ import SwiftUI
 ///   - A logo is displayed at the center with a fade-out animation.
 ///   - The app's name "Expense Tracker" is shown below the logo.
 struct SplashScreenView: View {
-    /// Environment-injected user provider used for authentication and user state management.
-    @Environment(\.userProvider) var userProvider
-    
+    /// An instance of `Authenticator` that handles authentication and user state.
+    /// Using `@State` keeps it alive during the lifetime of the scene.
+    @State private var authenticator = FirebaseAuthenticator()
+
     /// State variable holding the current database switcher instance.
     /// This determines which database (in-memory, local, Firebase) the app should use.
     @State private var databaseManager = DatabaseManager(databaseHandler: DatabaseHandlerImpl())
     
+    /// An instance of `TabManager` that tracks the selected tab index throughout the app.
+    ///
+    /// It's marked with `@State` to maintain its lifecycle and ensure it stays alive across view updates.
+    /// It's injected into the environment so any view in the app hierarchy can access and modify it.
+    @State private var tabManager = TabManager()
+
     /// A state variable that determines whether the splash screen should be active or not.
     /// When `isActive` is true, the main `ExpenseListView` is shown.
     @State private var isActive = false
@@ -37,8 +44,14 @@ struct SplashScreenView: View {
         // If the splash screen is not active, show the splash screen with logo and app name.
         if isActive {
             // Transition to the main content view once the splash screen is done.
+            /// - `.environment(tabManager)` injects the `TabManager` into the view hierarchy.
+            /// - `.environment(authenticator)` injects the `FirebaseAuthenticator` into the view hierarchy.
+            /// - `.environment(databaseManager)` injects the `DatabaseManager` into the view hierarchy.
+
             ContentView()
                 .environment(databaseManager)
+                .environment(\.authenticator, authenticator)
+                .environmentObject(tabManager)
         } else {
             ZStack {
                 // Set background color based on color scheme (dark or light mode).
@@ -72,5 +85,4 @@ struct SplashScreenView: View {
 
 #Preview {
     SplashScreenView()
-        .environmentObject(TabManager())
 }

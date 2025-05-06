@@ -8,32 +8,44 @@
 import Testing
 @testable import ExpenseTracker
 
-@MainActor
 @Suite("SignInViewModel Tests")
 struct SignInViewModelTests {
     var viewModel: SignInView.ViewModel
-    var userProvider: MockUserProvider
+    var authenticator: MockAuthenticator
     
     init() async throws {
-        userProvider = MockUserProvider()
-        viewModel = .init(userProvider: userProvider)
+        authenticator = MockAuthenticator()
+        viewModel = .init(authenticator: authenticator)
     }
 
     @Test("Sign in - Success", .tags(.signIn))
     func signInSuccess() async throws {
+        viewModel.email = "test@example.com"
+        viewModel.password = "12345678"
         await viewModel.signIn()
         
         #expect(viewModel.showError == false)
         #expect(viewModel.errorMessage == "")
     }
     
-    @Test("Sign in - Failure", .tags(.signIn))
-    func signInFailure() async throws {
-        userProvider.shouldFailSignIn = true
+    @Test("Sign in - Failure(Email is not registered)", .tags(.signIn))
+    func signInFailureEmailUnregistered() async throws {
+        viewModel.email = "test123@example.com"
+        viewModel.password = "12345678"
         await viewModel.signIn()
         
         #expect(viewModel.showError == true)
-        #expect(viewModel.errorMessage == "Sign in failed")
+        #expect(viewModel.errorMessage == "Email is not registered")
+    }
+    
+    @Test("Sign in - Failure(Password is incorrect)", .tags(.signIn))
+    func signInFailurePasswordIncorrect() async throws {
+        viewModel.email = "test@example.com"
+        viewModel.password = "123456"
+        await viewModel.signIn()
+        
+        #expect(viewModel.showError == true)
+        #expect(viewModel.errorMessage == "Password is incorrect")
     }
     
     @Test("Sign in with Google - Success", .tags(.signIn))
@@ -46,7 +58,7 @@ struct SignInViewModelTests {
     
     @Test("Sign in with Google - Failure", .tags(.signIn))
     func signInWithGoogleFailure() async throws {
-        userProvider.shouldFailGoogleSignIn = true
+        authenticator.shouldFailGoogleSignIn = true
         await viewModel.signInWithGoogle()
         
         #expect(viewModel.showError == true)

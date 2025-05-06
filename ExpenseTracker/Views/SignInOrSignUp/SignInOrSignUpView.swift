@@ -15,8 +15,8 @@ struct SignInOrSignUpView: View {
     @Environment(DatabaseManager.self) private var databaseManager
     
     @Environment(\.dismiss) private var dismiss
-    /// The shared `UserProvider` from the environment for authentication operations.
-    @Environment(\.userProvider) private var userProvider
+    /// The shared `Authenticator` from the environment for authentication operations.
+    @Environment(\.authenticator) private var authenticator
 
     /// A flag indicating whether the view is currently showing the sign-in screen.
     @State private var isSignInMode: Bool = false
@@ -28,7 +28,7 @@ struct SignInOrSignUpView: View {
     var body: some View {
         if isSignInMode {
             /// Displays the SignInView when in sign-in mode.
-            SignInView(userProvider: userProvider, onSignUp: {
+            SignInView(authenticator: authenticator, onSignUp: {
                 // Toggle back to sign-up mode with animation.
                 withAnimation {
                     isSignInMode.toggle()
@@ -44,7 +44,7 @@ struct SignInOrSignUpView: View {
             .progressHUD(isShowing: $isLoading, title: .constant("Syncing..."))
         } else {
             /// Displays the SignUpView when in sign-up mode.
-            SignUpView(userProvider: userProvider, onSignIn: {
+            SignUpView(authenticator: authenticator, onSignIn: {
                 // Toggle to sign-in mode with animation.
                 withAnimation {
                     isSignInMode.toggle()
@@ -62,7 +62,7 @@ struct SignInOrSignUpView: View {
     }
     
     private func syncData() async {
-        if let user = userProvider.user {
+        if let user = authenticator.user {
             isLoading = true
             UserDefaults.standard.databaseType = .firebase(user.id)
             UserDefaults.standard.isSignedIn = true
@@ -76,5 +76,5 @@ struct SignInOrSignUpView: View {
 
 #Preview {
     SignInOrSignUpView() { }
-        .environment(\.userProvider, ClerkUserProvider())
+        .environment(FirebaseAuthenticator())
 }

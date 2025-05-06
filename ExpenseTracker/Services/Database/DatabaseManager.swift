@@ -42,6 +42,9 @@ class DatabaseManager {
     /// - Parameter databaseHandler: The handler responsible for executing local database operations.
     init(databaseHandler: DatabaseHandler) {
         self.localDatabaseHandler = databaseHandler
+        if case let .firebase(userId) = UserDefaults.standard.databaseType {
+            self.remoteDatabaseHandler = DatabaseHandlerImpl(database: FirebaseDatabase(userId: userId))
+        }
     }
         
     /// Assigns a `DatabaseHandler` to be used as the remote handler.
