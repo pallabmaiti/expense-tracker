@@ -33,7 +33,8 @@ class FirebaseDatabase: Database {
         var _expenses: [DatabaseExpense] = []
         let documents = try await firestoreExpensesCollection.getDocuments().documents
         for document in documents {
-            _expenses.append(try document.data(as: DatabaseExpense.self))
+            let expense = try document.data(as: DatabaseExpense.self)
+            _expenses.append(expense)
         }
         return _expenses
     }
