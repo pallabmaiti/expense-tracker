@@ -40,6 +40,13 @@
 			);
 			target = ED21E98D2D95286200DC60F1 /* ExpenseTracker */;
 		};
+		ED6DF7082DC9D319007797CC /* Exceptions for "ExpenseTrackerTests" folder in "ExpenseTrackerTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				SignInOrSignUp/VerifyOTPViewModelTests.swift,
+			);
+			target = ED73E0172DAF7E0300F2092A /* ExpenseTrackerTests */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -53,6 +60,9 @@
 		};
 		ED73E0192DAF7E0300F2092A /* ExpenseTrackerTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				ED6DF7082DC9D319007797CC /* Exceptions for "ExpenseTrackerTests" folder in "ExpenseTrackerTests" target */,
+			);
 			path = ExpenseTrackerTests;
 			sourceTree = "<group>";
 		};

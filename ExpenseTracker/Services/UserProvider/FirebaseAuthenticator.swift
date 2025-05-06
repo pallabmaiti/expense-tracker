@@ -14,9 +14,11 @@ import Foundation
 enum AuthenticationError: Error {
     /// A generic error case holding a descriptive error message.
     case error(String)
-    
+}
+
+extension AuthenticationError: LocalizedError {
     /// Provides a localized error message string for displaying to the user.
-    var localizedErrorMessage: String {
+    var errorDescription: String? {
         switch self {
         case .error(let message):
             return message

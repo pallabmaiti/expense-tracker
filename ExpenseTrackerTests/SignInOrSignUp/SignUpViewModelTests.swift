@@ -8,34 +8,46 @@
 import Testing
 @testable import ExpenseTracker
 
-@MainActor
 @Suite("SignUpViewModel Tests")
 struct SignUpViewModelTests {
     var viewModel: SignUpView.ViewModel
-    var userProvider: MockUserProvider
+    var authenticator: MockAuthenticator
     
     init() async throws {
-        userProvider = MockUserProvider()
-        viewModel = .init(userProvider: userProvider)
+        authenticator = MockAuthenticator()
+        viewModel = .init(authenticator: authenticator)
     }
 
     @Test("Sign up - Success", .tags(.signUp))
     func signUpSuccess() async throws {
+        viewModel.email = "test123@example.com"
+        viewModel.password = "12345678"
         await viewModel.signUp()
         
-        #expect(viewModel.isVerifying == true)
         #expect(viewModel.showError == false)
         #expect(viewModel.errorMessage == "")
     }
     
-    @Test("Sign up - Failure", .tags(.signUp))
-    func signUpFailure() async throws {
-        userProvider.shouldFailSignUp = true
+    @Test("Sign up - Failure(Email already exists)", .tags(.signUp))
+    func signUpFailureEmailExists() async throws {
+        viewModel.email = "test@example.com"
+        viewModel.password = "12345678"
+        
         await viewModel.signUp()
         
-        #expect(viewModel.isVerifying == false)
         #expect(viewModel.showError == true)
-        #expect(viewModel.errorMessage == "Sign up failed")
+        #expect(viewModel.errorMessage == "Email already exists")
+    }
+    
+    @Test("Sign up - Failure(Password too short)", .tags(.signUp))
+    func signUpFailurePasswordShort() async throws {
+        viewModel.email = "test123@example.com"
+        viewModel.password = "123456"
+        
+        await viewModel.signUp()
+        
+        #expect(viewModel.showError == true)
+        #expect(viewModel.errorMessage == "Password should be at least 8 characters long")
     }
     
     @Test("Sign up with Google - Success", .tags(.signUp))
@@ -48,7 +60,7 @@ struct SignUpViewModelTests {
     
     @Test("Sign up with Google - Failure", .tags(.signUp))
     func signUpWithGoogleFailure() async throws {
-        userProvider.shouldFailGoogleSignIn = true
+        authenticator.shouldFailGoogleSignIn = true
         await viewModel.signUpWithGoogle()
         
         #expect(viewModel.showError == true)
