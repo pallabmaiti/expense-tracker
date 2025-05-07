@@ -227,4 +227,44 @@ final class DatabaseWorker {
         try await database.clearIncomes()
         return ["data": true]
     }
+    
+    /// Fetches user details from the database and returns them in a dictionary format.
+    /// - Returns: A dictionary containing user data if found, otherwise an empty dictionary.
+    func fetchUserDetails() async throws -> [String: Any] {
+        if let user = try await database.fetchUser() {
+            return [
+                "data": [
+                    "id": user.id,
+                    "email": user.email,
+                    "firstName": user.firstName,
+                    "lastName": user.lastName
+                ]
+            ]
+        }
+        return ["data": [:]]
+    }
+
+    /// Updates the user details in the database.
+    /// - Parameters:
+    ///   - id: The user's unique identifier.
+    ///   - email: Optional email address.
+    ///   - firstName: Optional first name.
+    ///   - lastName: Optional last name.
+    /// - Returns: A dictionary indicating success.
+    func updateUserDetails(id: String, email: String?, firstName: String?, lastName: String?) async throws -> [String: Any] {
+        try await database.updateUser(.init(id: id, email: email, firstName: firstName, lastName: lastName))
+        return ["data": true]
+    }
+
+    /// Saves new or updated user details to the database.
+    /// - Parameters:
+    ///   - id: The user's unique identifier.
+    ///   - email: Optional email address.
+    ///   - firstName: Optional first name.
+    ///   - lastName: Optional last name.
+    /// - Returns: A dictionary indicating success.
+    func saveUserDetails(id: String, email: String?, firstName: String?, lastName: String?) async throws -> [String: Any] {
+        try await database.saveUser(.init(id: id, email: email, firstName: firstName, lastName: lastName))
+        return ["data": true]
+    }
 }

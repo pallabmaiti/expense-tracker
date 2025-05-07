@@ -17,11 +17,11 @@ protocol Database {
     /// - Parameter expense: The expense to be added.
     func addExpense(_ expense: DatabaseExpense) async throws
     
-    /// Deletes an expense at the specified index.
+    /// Deletes an expense entry from the database.
     /// - Parameter id: The id of the expense to be removed.
     func deleteExpense(_ id: String) async throws
     
-    /// Updates an existing expense at the given index with a new expense.
+    /// Updates an existing expense with a new expense.
     /// - Parameters:
     ///   - id: The id of the expense to be updated.
     ///   - newExpense: The new expense data to replace the existing one.
@@ -37,18 +37,29 @@ protocol Database {
     /// - Parameter income: The `DatabaseIncome` object to be added.
     func addIncome(_ income: DatabaseIncome) async throws
     
-    /// Deletes an income entry from the database at a specific index.
+    /// Deletes an income entry from the database.
     /// - Parameter id: The id of the income entry to be deleted.
     func deleteIncome(_ id: String) async throws
     
-    /// Updates an existing income entry at a specific index with new data.
+    /// Updates an existing income with a new income.
     /// - Parameters:
     ///   - id: The id of the income entry to be updated.
-    ///   - newIncome: The updated `DatabaseIncome` object.
+    ///   - newIncome: The new income data to replace the existing one.
     func updateIncome(for id: String, with newIncome: DatabaseIncome) async throws
     
     /// Removes all income entries from the database.
     func clearIncomes() async throws
+    
+    /// Return user's details.
+    func fetchUser() async throws -> User?
+    
+    /// Update user's details to the database.
+    /// - Parameter user: The new user data to replace the existing one.
+    func updateUser(_ user: User) async throws
+    
+    /// Save user's details to the database.
+    /// - Parameter user: The user to be added.
+    func saveUser(_ user: User) async throws
 }
 
 /// A concrete implementation of `Database` that persists expenses using `UserDefaults`.
@@ -71,6 +82,14 @@ class UserDefaultsDatabase: Database {
         }
     }
     
+    private var _user: User? {
+        didSet {
+            if let data = try? JSONEncoder().encode(_user) {
+                userDefaults.set(data, forKey: "UserDetails")
+            }
+        }
+    }
+    
     /// Initializes the database by loading stored expenses from `UserDefaults`.
     init() {
         self.userDefaults = .standard
@@ -83,6 +102,11 @@ class UserDefaultsDatabase: Database {
         if let data = userDefaults.data(forKey: "Incomes") {
             if let decode = try? JSONDecoder().decode([DatabaseIncome].self, from: data) {
                 _incomes = decode
+            }
+        }
+        if let data = userDefaults.data(forKey: "UserDetails") {
+            if let decode = try? JSONDecoder().decode(User.self, from: data) {
+                _user = decode
             }
         }
     }
@@ -176,6 +200,24 @@ class UserDefaultsDatabase: Database {
     func clearIncomes() async throws {
         _incomes.removeAll()
     }
+    
+    /// Retrieves the currently stored user.
+    /// - Returns: An optional `User` object.
+    func fetchUser() async throws -> User? {
+        _user
+    }
+
+    /// Updates the current user with new values.
+    /// - Parameter user: The `User` object containing updated values.
+    func updateUser(_ user: User) async throws {
+        _user = user
+    }
+
+    /// Saves a new or existing user to persistent storage (if applicable).
+    /// - Parameter user: The `User` object to save.
+    func saveUser(_ user: User) async throws {
+        _user = user
+    }
 }
 
 /// `InMemoryDatabase` is an implementation of the `Database` protocol that simulates a local in-memory database.
@@ -185,6 +227,9 @@ class InMemoryDatabase: Database {
     
     /// A private array holding the in-memory expenses.
     private var _expenses: [DatabaseExpense] = [.sample1, .sample2, .sample3]
+    
+    /// A private user holding the in-memory expenses.
+    private var _user: User = .init(id: UUID().uuidString, email: "johndoe@example.com", firstName: "John", lastName: "Doe")
     
     /// A `DispatchQueue` used for synchronizing access to the in-memory database to ensure thread safety.
     private let queue = DispatchQueue(label: "com.ExpenseTracker.InMemoryDatabase")
@@ -255,5 +300,23 @@ class InMemoryDatabase: Database {
     /// Clears all incomes from the database.
     func clearIncomes() async throws {
         _incomes.removeAll()
+    }
+    
+    /// Retrieves the currently stored user.
+    /// - Returns: An optional `User` object.
+    func fetchUser() async throws -> User? {
+        _user
+    }
+
+    /// Updates the current user with new values.
+    /// - Parameter user: The `User` object containing updated values.
+    func updateUser(_ user: User) async throws {
+        _user = user
+    }
+
+    /// Saves a new or existing user to persistent storage (if applicable).
+    /// - Parameter user: The `User` object to save.
+    func saveUser(_ user: User) async throws {
+        _user = user
     }
 }

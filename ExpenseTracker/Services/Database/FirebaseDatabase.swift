@@ -19,12 +19,16 @@ class FirebaseDatabase: Database {
     /// Firestore collection reference for the user's incomes.
     private let firestoreIncomesCollection: CollectionReference
     
+    /// Firestore collection reference for the user's incomes.
+    private let firestoreUserDetailsCollection: CollectionReference
+    
     /// Initializes a Firestore database instance scoped to the given user ID.
     /// - Parameter userId: The unique identifier of the current authenticated user.
     init(userId: String) {
         let firestore = Firestore.firestore()
         self.firestoreExpensesCollection = firestore.collection("users").document(userId).collection("expenses")
         self.firestoreIncomesCollection = firestore.collection("users").document(userId).collection("incomes")
+        self.firestoreUserDetailsCollection = firestore.collection("users").document(userId).collection("user_details")
     }
     
     /// An array of `DatabaseIncome` representing all stored incomes.
@@ -120,6 +124,40 @@ class FirebaseDatabase: Database {
         let documents = try await firestoreIncomesCollection.getDocuments().documents
         documents.forEach { $0.reference.delete() }
     }
+    
+    /// Fetches the first available user document from Firestore and decodes it into a `User` model.
+    /// - Returns: A `User` instance if a document exists and can be decoded; otherwise, `nil`.
+    func fetchUser() async throws -> User? {
+        let documents = try await firestoreUserDetailsCollection.getDocuments().documents
+        guard let document = documents.first else { return nil }
+        return try document.data(as: User.self)
+    }
+
+    /// Saves a new user to the Firestore collection.
+    /// - Parameter user: The `User` instance to be saved.
+    /// - Throws: `ExpenseTrackerError.invalidData` if encoding fails.
+    func saveUser(_ user: User) async throws {
+        if let data = try user.data() {
+            try await firestoreUserDetailsCollection.addDocument(data: data)
+        } else {
+            throw ExpenseTrackerError.invalidData
+        }
+    }
+
+    /// Updates an existing user document in Firestore by matching the user ID.
+    /// - Parameter user: The updated `User` instance.
+    /// - Throws: `ExpenseTrackerError.invalidData` if encoding fails.
+    func updateUser(_ user: User) async throws {
+        let documents = try await firestoreUserDetailsCollection
+            .whereField("id", isEqualTo: user.id)
+            .getDocuments()
+            .documents
+        if let data = try user.data() {
+            documents.forEach { $0.reference.updateData(data) }
+        } else {
+            throw ExpenseTrackerError.invalidData
+        }
+    }
 }
 
 /// Converts a `DatabaseExpense` into a dictionary format suitable for Firestore.
@@ -132,6 +170,13 @@ extension DatabaseExpense {
 
 /// Converts a `DatabaseIncome` into a dictionary format suitable for Firestore.
 extension DatabaseIncome {
+    func data() throws -> [String: Any]? {
+        let encoded = try JSONEncoder().encode(self)
+        return try JSONSerialization.jsonObject(with: encoded, options: []) as? [String: Any]
+    }
+}
+
+extension User {
     func data() throws -> [String: Any]? {
         let encoded = try JSONEncoder().encode(self)
         return try JSONSerialization.jsonObject(with: encoded, options: []) as? [String: Any]
