@@ -39,6 +39,7 @@ protocol Authenticator {
     func signInWithGoogle() async throws
     func updateEmail(_ email: String) async throws
     func reauthenticate(email: String, password: String) async throws
+    func updatePassword(_ newPassword: String) async throws
 }
 
 /// A user model used for session management and user data representation.
@@ -175,6 +176,27 @@ class FirebaseAuthenticator: Authenticator {
         let credential = EmailAuthProvider.credential(withEmail: email, password: password)
         try await user.reauthenticate(with: credential)
     }
+    
+    /// Updates the password for the currently signed-in Firebase user.
+    /// - Parameter newPassword: The new password to be set.
+    /// - Throws:
+    ///   - `AuthenticationError.sessionExpired` if the session is expired and user needs to reauthenticate.
+    ///   - Any other error thrown by Firebase if the update fails.
+    func updatePassword(_ newPassword: String) async throws {
+        guard let user = Auth.auth().currentUser else {
+            return
+        }
+        do {
+            try await user.updatePassword(to: newPassword)
+        } catch {
+            // Handle specific error case where app credential is missing (session expired).
+            if let error = error as? AuthErrorCode, error == .missingAppCredential {
+                throw AuthenticationError.sessionExpired
+            }
+            throw error
+        }
+    }
+    
     
     /// Deinitializes the class and removes the authentication state listener.
     deinit {
