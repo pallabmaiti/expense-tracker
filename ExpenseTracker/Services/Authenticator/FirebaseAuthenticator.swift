@@ -11,9 +11,11 @@ import FirebaseAuth
 import FirebaseCore
 import Foundation
 
-enum AuthenticationError: Error {
+enum AuthenticationError: Error, Equatable {
     /// A generic error case holding a descriptive error message.
     case error(String)
+    
+    case sessionExpired
 }
 
 extension AuthenticationError: LocalizedError {
@@ -22,6 +24,8 @@ extension AuthenticationError: LocalizedError {
         switch self {
         case .error(let message):
             return message
+        case .sessionExpired:
+            return ""
         }
     }
 }
@@ -33,6 +37,8 @@ protocol Authenticator {
     func signUp(email: String, password: String) async throws
     func signOut() throws
     func signInWithGoogle() async throws
+    func updateEmail(_ email: String) async throws
+    func reauthenticate(email: String, password: String) async throws
 }
 
 /// A user model used for session management and user data representation.
@@ -136,6 +142,38 @@ class FirebaseAuthenticator: Authenticator {
     func signOut() throws {
         try Auth.auth().signOut()
         user = nil
+    }
+    
+    /// Updates the current user's email address after sending a verification email.
+    /// - Parameter email: The new email address to update to.
+    /// - Throws: `AuthenticationError.sessionExpired` if the session is expired,
+    ///           or any other `AuthErrorCode` from Firebase.
+    func updateEmail(_ email: String) async throws {
+        guard let user = Auth.auth().currentUser else {
+            return
+        }
+        do {
+            try await user.sendEmailVerification(beforeUpdatingEmail: email)
+        } catch {
+            if let error = error as? AuthErrorCode, error == .missingAppCredential {
+                throw AuthenticationError.sessionExpired
+            }
+            throw error
+        }
+    }
+    
+    /// Re-authenticates the user with their email and password credentials.
+    /// Required for sensitive operations like updating email or password.
+    /// - Parameters:
+    ///   - email: The user's email address.
+    ///   - password: The user's password.
+    /// - Throws: An error if reauthentication fails (e.g., wrong credentials or expired session).
+    func reauthenticate(email: String, password: String) async throws {
+        guard let user = Auth.auth().currentUser else {
+            return
+        }
+        let credential = EmailAuthProvider.credential(withEmail: email, password: password)
+        try await user.reauthenticate(with: credential)
     }
     
     /// Deinitializes the class and removes the authentication state listener.
