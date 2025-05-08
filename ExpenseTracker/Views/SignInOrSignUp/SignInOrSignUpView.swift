@@ -36,9 +36,9 @@ struct SignInOrSignUpView: View {
             }, userAuthenticated: {
                 Task {
                     await syncData()
+                    userAuthenticated()
+                    dismiss()
                 }
-                userAuthenticated()
-                dismiss()
             })
             .transition(.slide.combined(with: .opacity)) // Adds animation during view switch.
             .progressHUD(isShowing: $isLoading, title: .constant("Syncing..."))
@@ -52,9 +52,9 @@ struct SignInOrSignUpView: View {
             }, userAuthenticated: {
                 Task {
                     await syncData()
+                    userAuthenticated()
+                    dismiss()
                 }
-                userAuthenticated()
-                dismiss()
             })
             .transition(.slide.combined(with: .opacity)) // Adds animation during view switch.
             .progressHUD(isShowing: $isLoading, title: .constant("Syncing..."))
@@ -69,6 +69,7 @@ struct SignInOrSignUpView: View {
             databaseManager.initializeRemoteDatabaseHandler(DatabaseHandlerImpl(database: FirebaseDatabase(userId: user.id)))
             await databaseManager.syncLocalWithRemote()
             await databaseManager.syncRemoteWithLocal()
+            await databaseManager.saveUser(user)
             isLoading = false
         }
     }
@@ -77,4 +78,5 @@ struct SignInOrSignUpView: View {
 #Preview {
     SignInOrSignUpView() { }
         .environment(FirebaseAuthenticator())
+        .environment(DatabaseManager.inMemoryDatabaseManager)
 }

@@ -65,4 +65,23 @@ enum DatabaseQuery {
     
     /// Deletes all income records from the database.
     case deleteAllIncome
+    
+    /// Retrieves user details.
+    case fetchUserDetails
+    
+    /// Save user details.
+    /// - Parameters:
+    ///   - id: The unique identifier of the user.
+    ///   - email: The email address of the user.
+    ///   - firstName: The first name of the user.
+    ///   - lastName: The last name of the user.
+    case saveUserDetails(String, String?, String?, String?)
+    
+    /// Update user details.
+    /// - Parameters:
+    ///   - id: The unique identifier of the user.
+    ///   - email: The email address of the user.
+    ///   - firstName: The first name of the user.
+    ///   - lastName: The last name of the user.
+    case updateUserDetails(String, String?, String?, String?)
 }

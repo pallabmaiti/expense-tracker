@@ -84,6 +84,21 @@ final class DatabaseHandlerImpl: DatabaseHandler {
             let result = try await databaseWorker.deleteAllIncomes()
             let jsonData = try JSONSerialization.data(withJSONObject: result, options: [])
             return jsonData
+            
+        case .fetchUserDetails:
+            let result = try await databaseWorker.fetchUserDetails()
+            let jsonData = try JSONSerialization.data(withJSONObject: result, options: [])
+            return jsonData
+            
+        case let .saveUserDetails(id, email, firstName, lastName):
+            let result = try await databaseWorker.saveUserDetails(id: id, email: email, firstName: firstName, lastName: lastName)
+            let jsonData = try JSONSerialization.data(withJSONObject: result, options: [])
+            return jsonData
+            
+        case let .updateUserDetails(id, email, firstName, lastName):
+            let result = try await databaseWorker.updateUserDetails(id: id, email: email, firstName: firstName, lastName: lastName)
+            let jsonData = try JSONSerialization.data(withJSONObject: result, options: [])
+            return jsonData
         }
     }
 }

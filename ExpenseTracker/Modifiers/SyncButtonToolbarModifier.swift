@@ -34,21 +34,9 @@ struct ToolbarSyncButtonModifier: ViewModifier {
             // Present sheet to either show account info or SignIn/SignUp view
             .sheet(isPresented: $isPresented, content: {
                 if UserDefaults.standard.isSignedIn {
-                    VStack {
-                        Text("Hello \(authenticator.user?.email ?? "User")")
-                        Button("Sign out") {
-                            Task {
-                                try? authenticator.signOut()
-                                UserDefaults.standard.databaseType = .local
-                                UserDefaults.standard.isSignedIn = false
-                                databaseManager.deinitializeRemoteDatabaseHandler()
-                            }
-                        }
-                    }
+                    AccountView(authenticator: authenticator, databaseManager: databaseManager)
                 } else {
-                    SignInOrSignUpView() {
-                        userAuthenticated()
-                    }
+                    SignInOrSignUpView(userAuthenticated: userAuthenticated)
                 }
             })
     }

@@ -342,6 +342,50 @@ class DatabaseManager {
         }
     }
 
+    func saveUser(_ user: User) async {
+        do {
+            _ = try await saveUserDetails(id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName)
+        } catch {
+            print("Error saving user: \(error.localizedDescription)")
+        }
+    }
+    
+    /// Fetch user details from database.
+    func fetchUserDetails() async throws -> User? {
+        let (localResult, remoteResult) = try await (localDatabaseHandler.request(.fetchUserDetails), remoteDatabaseHandler?.request(.fetchUserDetails))
+        let localUser: User? = try handleResponse(localResult)
+        if localUser == nil, let remoteResult {
+            let remoteUser: User? = try handleResponse(remoteResult)
+            if let remoteUser {
+                _ = try await localDatabaseHandler.request(.saveUserDetails(remoteUser.id, remoteUser.email, remoteUser.firstName, remoteUser.lastName))
+            }
+            return remoteUser
+        }
+        return localUser
+    }
+    
+    /// Update existing user details in the database.
+    /// - Parameters:
+    ///   - id: The unique identifier of the user.
+    ///   - email: The email address of the user.
+    ///   - firstName: The first name of the user.
+    ///   - lastName: The last name of the user.
+    func updateUserDetails(id: String, email: String?, firstName: String?, lastName: String?) async throws -> Bool {
+        let (localResult, _) = try await (localDatabaseHandler.request(.updateUserDetails(id, email, firstName, lastName)), remoteDatabaseHandler?.request(.updateUserDetails(id, email, firstName, lastName)))
+        return try handleResponse(localResult)
+    }
+    
+    /// Save user details in the database.
+    /// - Parameters:
+    ///   - id: The unique identifier of the user.
+    ///   - email: The email address of the user.
+    ///   - firstName: The first name of the user.
+    ///   - lastName: The last name of the user.
+    func saveUserDetails(id: String, email: String?, firstName: String?, lastName: String?) async throws -> Bool {
+        let (localResult, _) = try await (localDatabaseHandler.request(.saveUserDetails(id, email, firstName, lastName)), remoteDatabaseHandler?.request(.saveUserDetails(id, email, firstName, lastName)))
+        return try handleResponse(localResult)
+    }
+    
     /// Generic method to handle response decoding.
     private func handleResponse<T: Codable>(_ data: Data) throws -> T {
         let response = try JSONDecoder().decode(Response<T>.self, from: data)
