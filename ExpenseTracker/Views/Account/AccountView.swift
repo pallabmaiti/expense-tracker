@@ -24,11 +24,19 @@ struct AccountView: View {
     /// The image displayed as the user's profile picture.
     @State private var processedImage: Image?
     
+    /// Handles authentication (e.g., sign out).
+    private var authenticator: Authenticator
+    
+    /// Used for fetching and updating user details in the database.
+    private var databaseManager: DatabaseManager
+
     /// Initializes the view with dependencies.
     /// - Parameters:
     ///   - authenticator: Used for authentication actions like sign out.
     ///   - databaseManager: Used for saving user details.
     init(authenticator: Authenticator, databaseManager: DatabaseManager) {
+        self.authenticator = authenticator
+        self.databaseManager = databaseManager
         _viewModel = State(initialValue: .init(authenticator: authenticator, databaseManager: databaseManager))
     }
     
@@ -84,13 +92,22 @@ struct AccountView: View {
                     
                     // Account management links
                     Section {
-                        NavigationLink(destination: Text("Update Email")) {
+                        /*NavigationLink {
+                            UpdateEmailView(authenticator: authenticator, databaseManager: databaseManager)
+                        } label: {
                             VStack(alignment: .leading) {
                                 Text("Email")
                                 Text(viewModel.email)
                                     .foregroundStyle(.secondary)
                                     .font(.caption)
                             }
+                        }*/
+                        
+                        VStack(alignment: .leading) {
+                            Text("Email")
+                            Text(viewModel.email)
+                                .foregroundStyle(.secondary)
+                                .font(.caption)
                         }
                         
                         NavigationLink(destination: Text("Update Password")) {
