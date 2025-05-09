@@ -60,6 +60,10 @@ protocol Database {
     /// Save user's details to the database.
     /// - Parameter user: The user to be added.
     func saveUser(_ user: User) async throws
+    
+    /// Clear user details from the database.
+    /// - Parameter id: The unique identifier of the user.
+    func clearUser(_ id: String) async throws
 }
 
 /// A concrete implementation of `Database` that persists expenses using `UserDefaults`.
@@ -218,6 +222,13 @@ class UserDefaultsDatabase: Database {
     func saveUser(_ user: User) async throws {
         _user = user
     }
+    
+    /// Clear user details from the database.
+    /// - Parameter id: The unique identifier of the user.
+    func clearUser(_ id: String) async throws {
+        _user = nil
+        userDefaults.removeObject(forKey: "UserDetails")
+    }
 }
 
 /// `InMemoryDatabase` is an implementation of the `Database` protocol that simulates a local in-memory database.
@@ -229,7 +240,7 @@ class InMemoryDatabase: Database {
     private var _expenses: [DatabaseExpense] = [.sample1, .sample2, .sample3]
     
     /// A private user holding the in-memory expenses.
-    private var _user: User = .init(id: UUID().uuidString, email: "johndoe@example.com", firstName: "John", lastName: "Doe")
+    private var _user: User? = .init(id: UUID().uuidString, email: "johndoe@example.com", firstName: "John", lastName: "Doe")
     
     /// A `DispatchQueue` used for synchronizing access to the in-memory database to ensure thread safety.
     private let queue = DispatchQueue(label: "com.ExpenseTracker.InMemoryDatabase")
@@ -318,5 +329,11 @@ class InMemoryDatabase: Database {
     /// - Parameter user: The `User` object to save.
     func saveUser(_ user: User) async throws {
         _user = user
+    }
+    
+    /// Clear user details.
+    /// - Parameter id: The unique identifier of the user.
+    func clearUser(_ id: String) async throws {
+        _user = nil
     }
 }

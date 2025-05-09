@@ -88,6 +88,7 @@ class DatabaseManager {
     ///   - note: Additional details about the expense.
     /// - Returns: A `Bool` with `true` if the expense was saved successfully.
     /// - Throws: An `Error` if the operation failed.
+    @discardableResult
     func saveExpense(id: String, name: String, amount: Double, date: String, category: String, note: String) async throws -> Bool {
         async let localExpensesData = localDatabaseHandler.request(.addExpense(id, name, amount, date, category, note))
         async let remoteExpensesData = remoteDatabaseHandler?.request(.addExpense(id, name, amount, date, category, note))
@@ -102,6 +103,7 @@ class DatabaseManager {
     ///   - id: The unique identifier of the expense to delete.
     /// - Returns: A `Bool` with `true` if the expense was deleted successfully.
     /// - Throws: An `Error` if the operation failed.
+    @discardableResult
     func deleteExpense(id: String) async throws -> Bool {
         let (localResult, _) = try await (localDatabaseHandler.request(.deleteExpense(id)), remoteDatabaseHandler?.request(.deleteExpense(id)))
         return try handleResponse(localResult)
@@ -117,6 +119,7 @@ class DatabaseManager {
     ///   - note: The updated details about the expense.
     /// - Returns: A `Bool` with `true` if the update was successful.
     /// - Throws: An `Error` if the operation failed.
+    @discardableResult
     func updateExpense(id: String, name: String, amount: Double, date: String, category: String, note: String) async throws -> Bool {
         let (localResult, _) = try await (localDatabaseHandler.request(.updateExpense(id, name, amount, date, category, note)), remoteDatabaseHandler?.request(.updateExpense(id, name, amount, date, category, note)))
         return try handleResponse(localResult)
@@ -125,6 +128,7 @@ class DatabaseManager {
     /// Deletes all stored expenses from the database.
     /// - Returns: A `Bool` with `true` if all expenses were deleted successfully.
     /// - Throws: An `Error` if the operation failed.
+    @discardableResult
     func deleteAllExpenses() async throws -> Bool {
         let (localResult, _) = try await (localDatabaseHandler.request(.deleteAllExpenses), remoteDatabaseHandler?.request(.deleteAllExpenses))
         return try handleResponse(localResult)
@@ -151,6 +155,7 @@ class DatabaseManager {
     ///   - source: The source of income as a string.
     /// - Returns: A `Bool` with `true` if the income was saved successfully.
     /// - Throws: An `Error` if the operation failed.
+    @discardableResult
     func saveIncome(id: String, amount: Double, date: String, source: String) async throws -> Bool {
         let (localResult, _) = try await (localDatabaseHandler.request(.addIncome(id, amount, date, source)), remoteDatabaseHandler?.request(.addIncome(id, amount, date, source)))
         return try handleResponse(localResult)
@@ -164,6 +169,7 @@ class DatabaseManager {
     ///   - source: The updated source of income as a string.
     /// - Returns: A `Bool` with `true` if the update was successful.
     /// - Throws: An `Error` if the operation failed.
+    @discardableResult
     func updateIncome(id: String, amount: Double, date: String, source: String) async throws -> Bool {
         let (localResult, _) = try await (localDatabaseHandler.request(.updateIncome(id, amount, date, source)), remoteDatabaseHandler?.request(.updateIncome(id, amount, date, source)))
         return try handleResponse(localResult)
@@ -173,6 +179,7 @@ class DatabaseManager {
     /// - Parameter id: The unique identifier of the income entry to delete.
     /// - Returns: A `Bool` with `true` if the income was deleted successfully.
     /// - Throws: An `Error` if the operation failed.
+    @discardableResult
     func deleteIncome(id: String) async throws -> Bool {
         let (localResult, _) = try await (localDatabaseHandler.request(.deleteIncome(id)), remoteDatabaseHandler?.request(.deleteIncome(id)))
         return try handleResponse(localResult)
@@ -181,6 +188,7 @@ class DatabaseManager {
     /// Deletes all income records from the database.
     /// - Returns: A `Bool` with `true` if all incomes were deleted successfully
     /// - Throws: An `Error` if the operation failed.
+    @discardableResult
     func deleteAllIncomes() async throws -> Bool {
         let (localResult, _) = try await (localDatabaseHandler.request(.deleteAllIncome), remoteDatabaseHandler?.request(.deleteAllIncome))
         return try handleResponse(localResult)
@@ -341,12 +349,57 @@ class DatabaseManager {
             }
         }
     }
-
-    func saveUser(_ user: User) async {
+    
+    
+    func syncUserDetails(_ user: User) async {
         do {
-            _ = try await saveUserDetails(id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName)
+            let (localResult, remoteResult) = try await (localDatabaseHandler.request(.fetchUserDetails), remoteDatabaseHandler?.request(.fetchUserDetails))
+            let localUser: User? = try handleResponse(localResult)
+            if let remoteResult,
+               let remoteUser: User? = try handleResponse(remoteResult),
+               let remoteUser {
+                if localUser == nil {
+                    _ = try await localDatabaseHandler.request(
+                        .saveUserDetails(
+                            remoteUser.id,
+                            remoteUser.email ?? "",
+                            remoteUser.firstName ?? "",
+                            remoteUser.lastName ?? ""
+                        )
+                    )
+                } else {
+                    _ = try await localDatabaseHandler.request(
+                        .updateUserDetails(
+                            remoteUser.id,
+                            remoteUser.email ?? "",
+                            remoteUser.firstName ?? "",
+                            remoteUser.lastName ?? ""
+                        )
+                    )
+                }
+            } else {
+                if localUser == nil {
+                    _ = try await localDatabaseHandler.request(
+                        .saveUserDetails(
+                            user.id,
+                            user.email,
+                            user.firstName,
+                            user.lastName
+                        )
+                    )
+                } else {
+                    _ = try await localDatabaseHandler.request(
+                        .updateUserDetails(
+                            user.id,
+                            user.email,
+                            user.firstName,
+                            user.lastName
+                        )
+                    )
+                }
+            }
         } catch {
-            print("Error saving user: \(error.localizedDescription)")
+            print("Error syncing user details: \(error.localizedDescription)")
         }
     }
     
@@ -370,6 +423,7 @@ class DatabaseManager {
     ///   - email: The email address of the user.
     ///   - firstName: The first name of the user.
     ///   - lastName: The last name of the user.
+    @discardableResult
     func updateUserDetails(id: String, email: String?, firstName: String?, lastName: String?) async throws -> Bool {
         let (localResult, _) = try await (localDatabaseHandler.request(.updateUserDetails(id, email, firstName, lastName)), remoteDatabaseHandler?.request(.updateUserDetails(id, email, firstName, lastName)))
         return try handleResponse(localResult)
@@ -381,8 +435,25 @@ class DatabaseManager {
     ///   - email: The email address of the user.
     ///   - firstName: The first name of the user.
     ///   - lastName: The last name of the user.
+    @discardableResult
     func saveUserDetails(id: String, email: String?, firstName: String?, lastName: String?) async throws -> Bool {
-        let (localResult, _) = try await (localDatabaseHandler.request(.saveUserDetails(id, email, firstName, lastName)), remoteDatabaseHandler?.request(.saveUserDetails(id, email, firstName, lastName)))
+        let localSaveUserDetailsResult = try await localDatabaseHandler.request(.saveUserDetails(id, email, firstName, lastName))
+        
+        if let remoteFetchUserDetails = try await remoteDatabaseHandler?.request(.fetchUserDetails) {
+            let remoteuser: User? = try handleResponse(remoteFetchUserDetails)
+            if remoteuser == nil {
+                _ = try await remoteDatabaseHandler?.request(.saveUserDetails(id, email, firstName, lastName))
+            }
+        }
+        
+        return try handleResponse(localSaveUserDetailsResult)
+    }
+    
+    /// Clear user details from local database.
+    /// - Parameter id: The unique identifier of the user.
+    @discardableResult
+    func clearLocalUserDetails(id: String) async throws -> Bool {
+        let localResult = try await localDatabaseHandler.request(.clearUserDetails(id))
         return try handleResponse(localResult)
     }
     
