@@ -84,4 +84,8 @@ enum DatabaseQuery {
     ///   - firstName: The first name of the user.
     ///   - lastName: The last name of the user.
     case updateUserDetails(String, String?, String?, String?)
+    
+    /// Clear user details.
+    /// - Parameter id: The unique identifier of the user.
+    case clearUserDetails(String)
 }

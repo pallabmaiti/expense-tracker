@@ -85,12 +85,15 @@ extension AccountView {
         }
         
         /// Signs the user out and resets session-related data.
-        func signOut() {
+        func signOut() async {
             do {
                 try authenticator.signOut()
                 UserDefaults.standard.databaseType = .local
                 UserDefaults.standard.isSignedIn = false
                 databaseManager.deinitializeRemoteDatabaseHandler()
+                if let user {
+                    try await databaseManager.clearLocalUserDetails(id: user.id)
+                }
             } catch {
                 errorMessage = error.localizedDescription
                 showError = true
