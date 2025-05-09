@@ -110,7 +110,7 @@ struct AccountView: View {
                                 .font(.caption)
                         }
                         
-                        NavigationLink {
+                        /*NavigationLink {
                             UpdatePasswordView(authenticator: authenticator, databaseManager: databaseManager)
                         } label: {
                             VStack(alignment: .leading) {
@@ -119,7 +119,7 @@ struct AccountView: View {
                                     .foregroundStyle(.secondary)
                                     .font(.caption)
                             }
-                        }
+                        }*/
                     }
                     
                     // Sign out button
