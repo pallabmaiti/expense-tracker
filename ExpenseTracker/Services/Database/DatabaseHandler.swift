@@ -99,6 +99,11 @@ final class DatabaseHandlerImpl: DatabaseHandler {
             let result = try await databaseWorker.updateUserDetails(id: id, email: email, firstName: firstName, lastName: lastName)
             let jsonData = try JSONSerialization.data(withJSONObject: result, options: [])
             return jsonData
+            
+        case let .clearUserDetails(id):
+            let result = try await databaseWorker.clearUserDetails(id: id)
+            let jsonData = try JSONSerialization.data(withJSONObject: result, options: [])
+            return jsonData
         }
     }
 }

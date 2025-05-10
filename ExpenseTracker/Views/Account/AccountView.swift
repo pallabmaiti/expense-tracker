@@ -124,8 +124,10 @@ struct AccountView: View {
                     
                     // Sign out button
                     Button {
-                        viewModel.signOut()
-                        dismiss()
+                        Task {
+                            await viewModel.signOut()
+                            dismiss()
+                        }
                     } label: {
                         Text("Sign Out")
                             .frame(maxWidth: .infinity)

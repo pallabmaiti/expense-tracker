@@ -241,9 +241,9 @@ final class DatabaseWorker {
                 ]
             ]
         }
-        return ["data": [:]]
+        return ["data": NSNull()]
     }
-
+    
     /// Updates the user details in the database.
     /// - Parameters:
     ///   - id: The user's unique identifier.
@@ -255,7 +255,7 @@ final class DatabaseWorker {
         try await database.updateUser(.init(id: id, email: email, firstName: firstName, lastName: lastName))
         return ["data": true]
     }
-
+    
     /// Saves new or updated user details to the database.
     /// - Parameters:
     ///   - id: The user's unique identifier.
@@ -265,6 +265,14 @@ final class DatabaseWorker {
     /// - Returns: A dictionary indicating success.
     func saveUserDetails(id: String, email: String?, firstName: String?, lastName: String?) async throws -> [String: Any] {
         try await database.saveUser(.init(id: id, email: email, firstName: firstName, lastName: lastName))
+        return ["data": true]
+    }
+    
+    /// Clear user details.
+    /// - Parameters:
+    ///   - id: The user's unique identifier.
+    func clearUserDetails(id: String) async throws -> [String: Any] {
+        try await database.clearUser(id)
         return ["data": true]
     }
 }

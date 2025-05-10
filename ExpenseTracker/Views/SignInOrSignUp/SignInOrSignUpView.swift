@@ -69,7 +69,7 @@ struct SignInOrSignUpView: View {
             databaseManager.initializeRemoteDatabaseHandler(DatabaseHandlerImpl(database: FirebaseDatabase(userId: user.id)))
             await databaseManager.syncLocalWithRemote()
             await databaseManager.syncRemoteWithLocal()
-            await databaseManager.saveUser(user)
+            await databaseManager.syncUserDetails(user)
             isLoading = false
         }
     }

@@ -158,6 +158,16 @@ class FirebaseDatabase: Database {
             throw ExpenseTrackerError.invalidData
         }
     }
+    
+    /// Clears an existing user document in Firestore by matching the user ID.
+    /// - Parameter id: The unique identifier of the user.
+    func clearUser(_ id: String) async throws {
+        let documents = try await firestoreUserDetailsCollection
+            .whereField("id", isEqualTo: id)
+            .getDocuments()
+            .documents
+        documents.forEach { $0.reference.delete() }
+    }
 }
 
 /// Converts a `DatabaseExpense` into a dictionary format suitable for Firestore.
