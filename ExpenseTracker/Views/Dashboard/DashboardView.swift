@@ -32,7 +32,7 @@ struct DashboardView: View {
     var currentMonth: String {
         Date().formattedString(dateFormat: "MMMM yyyy")
     }
-        
+    
     /// The `databaseManager` object that handles the interaction with the data storage.
     let databaseManager: DatabaseManager
     
@@ -220,5 +220,4 @@ struct DashboardView: View {
 #Preview {
     DashboardView(databaseManager: DatabaseManager(databaseHandler: DatabaseHandlerImpl(database: InMemoryDatabase())))
         .environmentObject(TabManager())
-        .environment(FirebaseAuthenticator())
 }

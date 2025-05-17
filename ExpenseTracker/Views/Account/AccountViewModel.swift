@@ -25,20 +25,31 @@ extension AccountView {
         /// Flag to control the display of an error alert.
         var showError: Bool = false
         
+        var enableDailyExpenseNotifications: Bool = false
+        
+        /// The current setting for daily expense notifications, if any.
+        var dailyExpenseNotificationSettings: NotificationSetting?
+        
         /// Handles authentication (e.g., sign out).
         private var authenticator: Authenticator
         
         /// Used for fetching and updating user details in the database.
         private var databaseManager: DatabaseManager
         
+        /// Manages scheduling, handling, and updating notification-related data for the app.
+        private let notificationManager: NotificationManager
+        
         /// Holds the current user object fetched from the database.
         private var user: User?
         
         /// Initializes the view model with authenticator and database manager.
         /// Automatically fetches user details on creation.
-        init(authenticator: Authenticator, databaseManager: DatabaseManager) {
+        init(authenticator: Authenticator, databaseManager: DatabaseManager, notificationManager: NotificationManager) {
             self.authenticator = authenticator
             self.databaseManager = databaseManager
+            self.notificationManager = notificationManager
+            self.enableDailyExpenseNotifications = notificationManager.dailyExpenseNotificationSetting != nil
+            self.dailyExpenseNotificationSettings = notificationManager.dailyExpenseNotificationSetting
             Task {
                 await fetchUserDetails()
             }
@@ -98,6 +109,18 @@ extension AccountView {
                 errorMessage = error.localizedDescription
                 showError = true
             }
+        }
+        
+        /// Removes all pending daily expense reminder notifications and clears saved settings.
+        func removeAllPendingDailyExpenseNotifications() {
+            notificationManager.removeAllPendingDailyExpenseNotifications()
+            dailyExpenseNotificationSettings = nil
+        }
+        
+        /// Schedules a daily expense reminder notification at the specified time.
+        func scheduleDailyExpenseNotification() async {
+            await notificationManager.scheduleDailyExpenseNotification()
+            dailyExpenseNotificationSettings = notificationManager.dailyExpenseNotificationSetting
         }
     }
 }

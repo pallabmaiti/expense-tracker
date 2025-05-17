@@ -12,6 +12,7 @@ import SwiftUI
 struct ToolbarSyncButtonModifier: ViewModifier {
     @Environment(\.authenticator) private var authenticator
     @Environment(DatabaseManager.self) private var databaseManager
+    @Environment(NotificationManager.self) private var notificationManager
     
     @State private var isPresented = false
         
@@ -34,7 +35,7 @@ struct ToolbarSyncButtonModifier: ViewModifier {
             // Present sheet to either show account info or SignIn/SignUp view
             .sheet(isPresented: $isPresented, content: {
                 if UserDefaults.standard.isSignedIn {
-                    AccountView(authenticator: authenticator, databaseManager: databaseManager)
+                    AccountView(authenticator: authenticator, databaseManager: databaseManager, notificationManager: notificationManager)
                 } else {
                     SignInOrSignUpView(userAuthenticated: userAuthenticated)
                 }
