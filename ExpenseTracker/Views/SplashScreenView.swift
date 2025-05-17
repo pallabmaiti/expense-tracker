@@ -21,7 +21,7 @@ struct SplashScreenView: View {
     /// An instance of `Authenticator` that handles authentication and user state.
     /// Using `@State` keeps it alive during the lifetime of the scene.
     @State private var authenticator = FirebaseAuthenticator()
-
+    
     /// State variable holding the current database switcher instance.
     /// This determines which database (in-memory, local, Firebase) the app should use.
     @State private var databaseManager = DatabaseManager(databaseHandler: DatabaseHandlerImpl())
@@ -31,7 +31,10 @@ struct SplashScreenView: View {
     /// It's marked with `@State` to maintain its lifecycle and ensure it stays alive across view updates.
     /// It's injected into the environment so any view in the app hierarchy can access and modify it.
     @State private var tabManager = TabManager()
-
+    
+    /// Handles all local notification scheduling and permission logic.
+    @State private var notificationManager = NotificationManager(center: .init(), settings: NotificationSettingsHandler())
+    
     /// A state variable that determines whether the splash screen should be active or not.
     /// When `isActive` is true, the main `ExpenseListView` is shown.
     @State private var isActive = false
@@ -47,11 +50,20 @@ struct SplashScreenView: View {
             /// - `.environment(tabManager)` injects the `TabManager` into the view hierarchy.
             /// - `.environment(authenticator)` injects the `FirebaseAuthenticator` into the view hierarchy.
             /// - `.environment(databaseManager)` injects the `DatabaseManager` into the view hierarchy.
-
+            
             ContentView()
+                .task {
+                    Task {
+                        let isAuthorized = await notificationManager.requestPermission()
+                        if isAuthorized {
+                            await notificationManager.scheduleDailyExpenseNotification()
+                        }
+                    }
+                }
                 .environment(databaseManager)
                 .environment(\.authenticator, authenticator)
                 .environmentObject(tabManager)
+                .environment(notificationManager)
         } else {
             ZStack {
                 // Set background color based on color scheme (dark or light mode).

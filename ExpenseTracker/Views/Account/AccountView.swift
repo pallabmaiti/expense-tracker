@@ -34,10 +34,11 @@ struct AccountView: View {
     /// - Parameters:
     ///   - authenticator: Used for authentication actions like sign out.
     ///   - databaseManager: Used for saving user details.
-    init(authenticator: Authenticator, databaseManager: DatabaseManager) {
+    ///   - notificationManager: Used for handling notification-related data.
+    init(authenticator: Authenticator, databaseManager: DatabaseManager, notificationManager: NotificationManager) {
         self.authenticator = authenticator
         self.databaseManager = databaseManager
-        _viewModel = State(initialValue: .init(authenticator: authenticator, databaseManager: databaseManager))
+        _viewModel = State(initialValue: .init(authenticator: authenticator, databaseManager: databaseManager, notificationManager: notificationManager))
     }
     
     var body: some View {
@@ -122,6 +123,33 @@ struct AccountView: View {
                         }*/
                     }
                     
+                    Section {
+                        HStack {
+                            VStack(alignment: .leading) {
+                                Text("Daily Expense Notifications")
+                                if let formattedTime = viewModel.dailyExpenseNotificationSettings?.formattedTime {
+                                    Text("Everyday at \(formattedTime)")
+                                        .foregroundStyle(.secondary)
+                                        .font(.caption)
+                                }
+                            }
+                            Spacer()
+                            Toggle("Daily Expense Notifications", isOn: $viewModel.enableDailyExpenseNotifications)
+                                .labelsHidden()
+                            
+                        }
+                        .onChange(of: viewModel.enableDailyExpenseNotifications) { _ , newValue in
+                            if newValue {
+                                Task {
+                                    await viewModel.scheduleDailyExpenseNotification()
+                                }
+                            } else {
+                                viewModel.removeAllPendingDailyExpenseNotifications()
+                            }
+                        }
+                    }
+                    
+                    
                     // Sign out button
                     Button {
                         Task {
@@ -175,5 +203,5 @@ struct AccountView: View {
 }
 
 #Preview {
-    AccountView(authenticator: FirebaseAuthenticator(), databaseManager: .inMemoryDatabaseManager)
+    AccountView(authenticator: FirebaseAuthenticator(), databaseManager: .inMemoryDatabaseManager, notificationManager: .init(center: .init(), settings: InMemoryNotificationSettingsHandler()))
 }
