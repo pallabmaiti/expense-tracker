@@ -9,6 +9,7 @@ import Foundation
 @testable import ExpenseTracker
 
 class MockAuthenticator: Authenticator {
+    
     private(set) var isLoading: Bool = false
     
     private var signInEmail = "test@example.com"
@@ -52,6 +53,23 @@ class MockAuthenticator: Authenticator {
     func signInWithGoogle() async throws {
         if shouldFailGoogleSignIn {
             throw AuthenticationError.error("Google sign in failed")
+        }
+        user = existingUser
+    }
+    
+    func updateEmail(_ email: String) async throws {
+        if existingEmails.contains(email) {
+            throw AuthenticationError.error("Email already exists")
+        }
+    }
+    
+    func reauthenticate(email: String, password: String) async throws {
+        try await signIn(email: email, password: password)
+    }
+    
+    func updatePassword(_ newPassword: String) async throws {
+        if newPassword.count < 8 {
+            throw AuthenticationError.error("Password should be at least 8 characters long")
         }
         user = existingUser
     }
