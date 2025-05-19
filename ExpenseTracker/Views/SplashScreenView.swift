@@ -53,6 +53,9 @@ struct SplashScreenView: View {
             
             ContentView()
                 .task {
+                    if case let .firebase(userId) = UserDefaults.standard.databaseType {
+                        databaseManager.initializeRemoteDatabaseHandler(DatabaseHandlerImpl(database: FirebaseDatabase(userId: userId)))
+                    }
                     Task {
                         let isAuthorized = await notificationManager.requestPermission()
                         if isAuthorized {

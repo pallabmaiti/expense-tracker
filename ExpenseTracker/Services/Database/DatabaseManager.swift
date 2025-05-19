@@ -42,11 +42,8 @@ class DatabaseManager {
     /// - Parameter databaseHandler: The handler responsible for executing local database operations.
     init(databaseHandler: DatabaseHandler) {
         self.localDatabaseHandler = databaseHandler
-        if case let .firebase(userId) = UserDefaults.standard.databaseType {
-            self.remoteDatabaseHandler = DatabaseHandlerImpl(database: FirebaseDatabase(userId: userId))
-        }
     }
-        
+    
     /// Assigns a `DatabaseHandler` to be used as the remote handler.
     ///
     /// This is typically called after user authentication to enable cloud data syncing.
@@ -62,20 +59,24 @@ class DatabaseManager {
     func deinitializeRemoteDatabaseHandler() {
         self.remoteDatabaseHandler = nil
     }
-
+    
     /// Fetches all expenses from the database.
     /// - Returns: An `Array` containing `Expense` objects
     /// - Throws: An `Error` if the operation failed.
     func fetchExpenses() async throws -> [Expense] {
-        let (localResult, remoteResult) = try await (localDatabaseHandler.request(.getExpenses), remoteDatabaseHandler?.request(.getExpenses))
-        
+        let localResult = try await (localDatabaseHandler.request(.getExpenses))
         let localExpenses: [Expense] = try handleResponse(localResult)
-        if let remoteResult {
+        if localExpenses.isNotEmpty {
+            return localExpenses
+        } else {
+            guard let remoteDatabaseHandler else {
+                return []
+            }
+            let remoteResult = try await remoteDatabaseHandler.request(.getExpenses)
             let remoteExpenses: [Expense] = try handleResponse(remoteResult)
-            await syncRemoteWithLocal(localExpenses: localExpenses, remoteExpenses: remoteExpenses)
+            await syncLocalWithRemoteExpenses(remoteExpenses)
+            return remoteExpenses
         }
-        
-        return localExpenses
     }
     
     /// Saves a new expense to the database.
@@ -138,13 +139,19 @@ class DatabaseManager {
     /// - Returns: An `Array` containing `Income` objects
     /// - Throws: An `Error` if the operation failed.
     func fetchIncomes() async throws -> [Income] {
-        let (localResult, remoteResult) = try await (localDatabaseHandler.request(.getIncomes), remoteDatabaseHandler?.request(.getIncomes))
+        let localResult = try await localDatabaseHandler.request(.getIncomes)
         let localIncomes: [Income] = try handleResponse(localResult)
-        if let remoteResult {
+        if localIncomes.isNotEmpty {
+            return localIncomes
+        } else {
+            guard let remoteDatabaseHandler else {
+                return []
+            }
+            let remoteResult = try await remoteDatabaseHandler.request(.getIncomes)
             let remoteIncomes: [Income] = try handleResponse(remoteResult)
-            await syncRemoteWithLocal(localIncomes: localIncomes, remoteIncomes: remoteIncomes)
+            await syncLocalWithRemoteIncomes(remoteIncomes)
+            return remoteIncomes
         }
-        return localIncomes
     }
     
     /// Saves a new income entry to the database.
@@ -204,23 +211,29 @@ class DatabaseManager {
     /// It checks for any expenses present in remote but missing in local and adds them.
     private func syncLocalExpensesWithRemote() async {
         do {
-            if let remoteResult = try await remoteDatabaseHandler?.request(.getExpenses) {
-                let remoteExpenses: [Expense] = try handleResponse(remoteResult)
-                let localResult = try await localDatabaseHandler.request(.getExpenses)
-                let localExpenses: [Expense] = try handleResponse(localResult)
-                let localExpenseSet = Set(localExpenses.map { $0.id })
-                for expense in remoteExpenses where !localExpenseSet.contains(expense.id) {
-                    _ = try await localDatabaseHandler.request(
-                        .addExpense(
-                            expense.id,
-                            expense.name,
-                            expense.amount,
-                            expense.date,
-                            expense.category.rawValue,
-                            expense.note
-                        )
+            guard let remoteDatabaseHandler else { return }
+            let remoteResult = try await remoteDatabaseHandler.request(.getExpenses)
+            let remoteExpenses: [Expense] = try handleResponse(remoteResult)
+            
+            let localResult = try await localDatabaseHandler.request(.getExpenses)
+            let localExpenses: [Expense] = try handleResponse(localResult)
+            
+            // Create a set of local expense IDs for fast lookup.
+            let localExpenseSet = Set(localExpenses.map { $0.id })
+            
+            // Iterate over each remote expense and sync it if it's missing remotely.
+            for expense in remoteExpenses where !localExpenseSet.contains(expense.id) {
+                _ = try await localDatabaseHandler.request(
+                    .addExpense(
+                        expense.id,
+                        expense.name,
+                        expense.amount,
+                        expense.date,
+                        expense.category.rawValue,
+                        expense.note
                     )
-                }
+                )
+                
             }
         } catch {
             print("Error synchronizing local expenses with remote: \(error.localizedDescription)")
@@ -231,22 +244,28 @@ class DatabaseManager {
     /// Only incomes missing in local are added.
     private func syncLocalIncomesWithRemote() async {
         do {
-            if let remoteResult = try await remoteDatabaseHandler?.request(.getIncomes) {
-                let remoteIncomes: [Income] = try handleResponse(remoteResult)
-                let localResult = try await localDatabaseHandler.request(.getIncomes)
-                let localIncomes: [Income] = try handleResponse(localResult)
-                let localIncomeSet = Set(localIncomes.map { $0.id })
-                for income in remoteIncomes where !localIncomeSet.contains(income.id) {
-                    _ = try await localDatabaseHandler.request(
-                        .addIncome(
-                            income.id,
-                            income.amount,
-                            income.date,
-                            income.source.rawValue
-                        )
+            guard let remoteDatabaseHandler else { return }
+            let remoteResult = try await remoteDatabaseHandler.request(.getIncomes)
+            let remoteIncomes: [Income] = try handleResponse(remoteResult)
+            
+            let localResult = try await localDatabaseHandler.request(.getIncomes)
+            let localIncomes: [Income] = try handleResponse(localResult)
+            
+            // Create a set of local income IDs for fast lookup.
+            let localIncomeSet = Set(localIncomes.map { $0.id })
+            
+            // Iterate over each remote income and sync it if it's missing remotely.
+            for income in remoteIncomes where !localIncomeSet.contains(income.id) {
+                _ = try await localDatabaseHandler.request(
+                    .addIncome(
+                        income.id,
+                        income.amount,
+                        income.date,
+                        income.source.rawValue
                     )
-                }
+                )
             }
+            
         } catch {
             print("Error synchronizing local incomes with remote: \(error.localizedDescription)")
         }
@@ -259,53 +278,80 @@ class DatabaseManager {
     }
     
     /// Synchronizes expenses from the local database to the remote database.
-    /// Expenses found in local but missing remotely are pushed to the remote database.
+    ///
+    /// This function compares local and remote expenses using their `id`s and uploads
+    /// any local expense that does not exist in the remote store.
     private func syncRemoteExpensesWithLocal() async {
         do {
-            var remoteExpenses: [Expense] = []
-            if let remoteResult = try await remoteDatabaseHandler?.request(.getExpenses) {
-                remoteExpenses = try handleResponse(remoteResult)
-            }
+            guard let remoteDatabaseHandler else { return }
+            let remoteResult = try await remoteDatabaseHandler.request(.getExpenses)
+            let remoteExpenses: [Expense] = try handleResponse(remoteResult)
+            
             let localResult = try await localDatabaseHandler.request(.getExpenses)
             let localExpenses: [Expense] = try handleResponse(localResult)
-            await syncRemoteWithLocal(localExpenses: localExpenses, remoteExpenses: remoteExpenses)
+            
+            // Create a set of remote expense IDs for fast lookup.
+            let remoteExpenseSet = Set(remoteExpenses.map { $0.id })
+            
+            // Iterate over each local expense and sync it if it's missing remotely.
+            for expense in localExpenses where !remoteExpenseSet.contains(expense.id) {
+                _ = try await remoteDatabaseHandler.request(
+                    .addExpense(
+                        expense.id,
+                        expense.name,
+                        expense.amount,
+                        expense.date,
+                        expense.category.rawValue,
+                        expense.note
+                    )
+                )
+            }
         } catch {
             print("Error synchronizing remote with local expenses: \(error.localizedDescription)")
         }
     }
     
     /// Synchronizes incomes from the local database to the remote database.
-    /// Incomes found in local but not in remote are pushed.
+    ///
+    /// This function compares local and remote incomes using their `id`s and uploads
+    /// any local income that does not exist in the remote store.
     private func syncRemoteIncomesWithLocal() async {
         do {
-            var remoteIncomes: [Income] = []
-            if let remoteResult = try await remoteDatabaseHandler?.request(.getIncomes) {
-                remoteIncomes = try handleResponse(remoteResult)
+            guard let remoteDatabaseHandler else {
+                return
             }
+            let remoteResult = try await remoteDatabaseHandler.request(.getIncomes)
+            let remoteIncomes: [Income] = try handleResponse(remoteResult)
+            
             let localResult = try await localDatabaseHandler.request(.getIncomes)
             let localIncomes: [Income] = try handleResponse(localResult)
-            await syncRemoteWithLocal(localIncomes: localIncomes, remoteIncomes: remoteIncomes)
+            
+            // Create a set of remote income IDs for fast lookup.
+            let remoteIncomeSet = Set(remoteIncomes.map { $0.id })
+            
+            // Iterate over each local income and sync it if it's missing remotely.
+            for income in localIncomes where !remoteIncomeSet.contains(income.id) {
+                _ = try await remoteDatabaseHandler.request(
+                    .addIncome(
+                        income.id,
+                        income.amount,
+                        income.date,
+                        income.source.rawValue
+                    )
+                )
+            }
         } catch {
             print("Error synchronizing remote with local incomes: \(error.localizedDescription)")
         }
     }
     
-    /// Synchronizes expenses from the local database to the remote database.
+    /// Synchronizes expenses from remote to the local database.
     ///
-    /// This function compares local and remote expenses using their `id`s and uploads
-    /// any local expense that does not exist in the remote store.
-    ///
-    /// - Parameters:
-    ///   - localExpenses: An array of `Expense` objects stored locally.
-    ///   - remoteExpenses: An array of `Expense` objects fetched from the remote source.
-    private func syncRemoteWithLocal(localExpenses: [Expense], remoteExpenses: [Expense]) async {
-        // Create a set of remote expense IDs for fast lookup.
-        let remoteExpenseSet = Set(remoteExpenses.map { $0.id })
-        
-        // Iterate over each local expense and sync it if it's missing remotely.
-        for expense in localExpenses where !remoteExpenseSet.contains(expense.id) {
+    /// - Parameter remoteExpenses: An array of `Expense` objects fetched from the remote source.
+    private func syncLocalWithRemoteExpenses(_ remoteExpenses: [Expense]) async {
+        for expense in remoteExpenses {
             do {
-                _ = try await remoteDatabaseHandler?.request(
+                _ = try await localDatabaseHandler.request(
                     .addExpense(
                         expense.id,
                         expense.name,
@@ -316,27 +362,18 @@ class DatabaseManager {
                     )
                 )
             } catch {
-                print("Error synchronizing remote with local expenses: \(error.localizedDescription)")
+                print("Error synchronizing local with remote expenses: \(error.localizedDescription)")
             }
         }
     }
-
+    
     /// Synchronizes incomes from the local database to the remote database.
     ///
-    /// This function compares local and remote incomes using their `id`s and uploads
-    /// any local income that does not exist in the remote store.
-    ///
-    /// - Parameters:
-    ///   - localIncomes: An array of `Income` objects stored locally.
-    ///   - remoteIncomes: An array of `Income` objects fetched from the remote source.
-    private func syncRemoteWithLocal(localIncomes: [Income], remoteIncomes: [Income]) async {
-        // Create a set of remote income IDs for fast lookup.
-        let remoteIncomeSet = Set(remoteIncomes.map { $0.id })
-        
-        // Iterate over each local income and sync it if it's missing remotely.
-        for income in localIncomes where !remoteIncomeSet.contains(income.id) {
+    /// - Parameter remoteIncomes: An array of `Income` objects fetched from the remote source.
+    private func syncLocalWithRemoteIncomes(_ remoteIncomes: [Income]) async {
+        for income in remoteIncomes {
             do {
-                _ = try await remoteDatabaseHandler?.request(
+                _ = try await localDatabaseHandler.request(
                     .addIncome(
                         income.id,
                         income.amount,
@@ -345,7 +382,7 @@ class DatabaseManager {
                     )
                 )
             } catch {
-                print("Error synchronizing remote with local incomes: \(error.localizedDescription)")
+                print("Error synchronizing local with remote incomes: \(error.localizedDescription)")
             }
         }
     }
