@@ -53,7 +53,7 @@ extension EditIncomeView {
         /// - Returns: A `Bool` indicating success (`true`) or failure (`false`).
         func updateIncome() async -> Bool {
             do {
-                return try await databaseManager.updateIncome(id: income.id, amount: amount, date: date.formattedString(), source: source.rawValue)
+                return try await databaseManager.updateIncome(.init(id: income.id, amount: amount, source: source, date: date))
             } catch {
                 showError = true
                 errorMessage = error.localizedDescription
@@ -65,7 +65,7 @@ extension EditIncomeView {
         /// - Returns: A `Bool` indicating success (`true`) or failure (`false`).
         func deleteIncome() async -> Bool {
             do {
-                return try await databaseManager.deleteIncome(id: income.id)
+                return try await databaseManager.deleteIncome(income)
             } catch {
                 showError = true
                 errorMessage = error.localizedDescription

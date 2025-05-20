@@ -66,7 +66,7 @@ struct SignInOrSignUpView: View {
             isLoading = true
             UserDefaults.standard.databaseType = .firebase(user.id)
             UserDefaults.standard.isSignedIn = true
-            databaseManager.initializeRemoteDatabaseHandler(DatabaseHandlerImpl(database: FirebaseDatabase(userId: user.id)))
+            databaseManager.initializeRemoteRepositoryHandler(firestoreRepositoryHandler(userId: user.id))
             await databaseManager.syncLocalWithRemote()
             await databaseManager.syncRemoteWithLocal()
             await databaseManager.syncUserDetails(user)
@@ -78,5 +78,5 @@ struct SignInOrSignUpView: View {
 #Preview {
     SignInOrSignUpView() { }
         .environment(FirebaseAuthenticator())
-        .environment(DatabaseManager.inMemoryDatabaseManager)
+        .environment(DatabaseManager.initWithInMemory)
 }

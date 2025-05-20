@@ -60,7 +60,7 @@ struct ContentView: View {
                 isLoading = true
                 UserDefaults.standard.databaseType = .firebase(user.id)
                 UserDefaults.standard.isSignedIn = true
-                databaseManager.initializeRemoteDatabaseHandler(DatabaseHandlerImpl(database: FirebaseDatabase(userId: user.id)))
+                databaseManager.initializeRemoteDatabaseHandler(DatabaseHandler(database: FirebaseDatabase(userId: user.id)))
                 Task.detached {
                     await databaseManager.syncLocalWithRemote()
                     await databaseManager.syncRemoteWithLocal()
@@ -80,5 +80,5 @@ struct ContentView: View {
 #Preview {
     ContentView()
         .environmentObject(TabManager())
-        .environment(DatabaseManager(databaseHandler: DatabaseHandlerImpl(database: InMemoryDatabase())))
+        .environment(DatabaseManager.initWithInMemory)
 }

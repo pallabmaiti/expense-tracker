@@ -51,12 +51,14 @@ extension AddExpenseView {
         func addExpense() async -> Bool {
             do {
                 return try await databaseManager.saveExpense(
-                    id: UUID().uuidString,
-                    name: name.trimmingCharacters(in: .whitespacesAndNewlines),
-                    amount: amount,
-                    date: date.formattedString(),
-                    category: category.rawValue,
-                    note: note.trimmingCharacters(in: .whitespacesAndNewlines)
+                    .init(
+                        id: UUID().uuidString,
+                        name: name.trimmingCharacters(in: .whitespacesAndNewlines),
+                        amount: amount,
+                        date: date,
+                        category: category,
+                        note: note.trimmingCharacters(in: .whitespacesAndNewlines)
+                    )
                 )
             } catch {
                 showError = true

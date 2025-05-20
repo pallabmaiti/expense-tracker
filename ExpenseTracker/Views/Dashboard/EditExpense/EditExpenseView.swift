@@ -145,5 +145,5 @@ struct EditExpenseView: View {
 }
 
 #Preview {
-    EditExpenseView(expense: .sample, databaseManager: DatabaseManager(databaseHandler: DatabaseHandlerImpl())) { }
+    EditExpenseView(expense: .sample, databaseManager: .initWithInMemory) { }
 }

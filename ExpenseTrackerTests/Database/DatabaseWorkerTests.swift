@@ -12,11 +12,11 @@ import Testing
 
 @Suite("Database Worker Tests")
 struct DatabaseWorkerTests {
-    var databaseWorker: DatabaseWorker
+    var databaseWorker: DatabaseRepository
     
     init() async throws {
         clearUserDefaults()
-        databaseWorker = DatabaseWorker(datebase: UserDefaultsDatabase(suiteName: userDefaultsTestSuiteName))
+        databaseWorker = DatabaseRepository(datebase: UserDefaultsDatabase(suiteName: userDefaultsTestSuiteName))
     }
     
     @Test("Return empty array when no expense saved", .tags(.expense.fetch))

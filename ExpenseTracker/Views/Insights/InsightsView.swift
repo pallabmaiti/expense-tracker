@@ -205,5 +205,5 @@ struct InsightsView: View {
 
 
 #Preview {
-    InsightsView(databaseManager: DatabaseManager(databaseHandler: DatabaseHandlerImpl(database: InMemoryDatabase())))
+    InsightsView(databaseManager: .initWithInMemory)
 }

@@ -24,7 +24,7 @@ struct SplashScreenView: View {
     
     /// State variable holding the current database switcher instance.
     /// This determines which database (in-memory, local, Firebase) the app should use.
-    @State private var databaseManager = DatabaseManager(databaseHandler: DatabaseHandlerImpl())
+    @State private var databaseManager = DatabaseManager.initWithUserDefaults
     
     /// An instance of `TabManager` that tracks the selected tab index throughout the app.
     ///
@@ -54,7 +54,7 @@ struct SplashScreenView: View {
             ContentView()
                 .task {
                     if case let .firebase(userId) = UserDefaults.standard.databaseType {
-                        databaseManager.initializeRemoteDatabaseHandler(DatabaseHandlerImpl(database: FirebaseDatabase(userId: userId)))
+                        databaseManager.initializeRemoteRepositoryHandler(firestoreRepositoryHandler(userId: userId))
                     }
                     Task {
                         let isAuthorized = await notificationManager.requestPermission()

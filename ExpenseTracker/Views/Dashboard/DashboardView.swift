@@ -204,7 +204,7 @@ struct DashboardView: View {
     /// - Parameter expense: The `Expense` object to be deleted.
     func deleteExpense(_ expense: Expense) {
         Task {
-            await viewModel.deleteExpense(id: expense.id)
+            await viewModel.deleteExpense(expense)
         }
     }
     
@@ -212,12 +212,12 @@ struct DashboardView: View {
     /// - Parameter income: The `Income` object to be deleted.
     func deleteIncome(_ income: Income) {
         Task {
-            await viewModel.deleteIncome(id: income.id)
+            await viewModel.deleteIncome(income)
         }
     }
 }
 
 #Preview {
-    DashboardView(databaseManager: DatabaseManager(databaseHandler: DatabaseHandlerImpl(database: InMemoryDatabase())))
+    DashboardView(databaseManager: .initWithInMemory)
         .environmentObject(TabManager())
 }

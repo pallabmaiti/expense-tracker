@@ -80,5 +80,5 @@ struct UpdatePasswordView: View {
 }
 
 #Preview {
-    UpdatePasswordView(authenticator: FirebaseAuthenticator(), databaseManager: .inMemoryDatabaseManager)
+    UpdatePasswordView(authenticator: FirebaseAuthenticator(), databaseManager: .initWithInMemory)
 }

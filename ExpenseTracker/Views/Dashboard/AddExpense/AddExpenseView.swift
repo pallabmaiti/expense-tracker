@@ -114,5 +114,5 @@ struct AddExpenseView: View {
 }
 
 #Preview {
-    AddExpenseView(databaseManager: DatabaseManager(databaseHandler: DatabaseHandlerImpl())) { }
+    AddExpenseView(databaseManager: .initWithInMemory) { }
 }

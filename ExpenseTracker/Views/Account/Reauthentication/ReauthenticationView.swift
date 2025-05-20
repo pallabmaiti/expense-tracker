@@ -69,5 +69,5 @@ struct ReauthenticationView: View {
 
 
 #Preview {
-    ReauthenticationView(authenticator: FirebaseAuthenticator(), databaseManager: .inMemoryDatabaseManager) { }
+    ReauthenticationView(authenticator: FirebaseAuthenticator(), databaseManager: .initWithInMemory) { }
 }

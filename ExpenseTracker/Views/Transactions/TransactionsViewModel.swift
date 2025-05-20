@@ -135,9 +135,9 @@ extension TransactionsView {
         
         /// Deletes an expense from the database.
         /// - Parameter id: The unique ID of the expense to be deleted.
-        func deleteExpense(_ id: String) async {
+        func deleteExpense(_ expense: Expense) async {
             do {
-                _ = try await databaseManager.deleteExpense(id: id)
+                _ = try await databaseManager.deleteExpense(expense)
                 await fetchExpenses()
             } catch {
                 showError.toggle()
@@ -148,9 +148,9 @@ extension TransactionsView {
         
         /// Deletes an income from the database.
         /// - Parameter id: The unique ID of the income to be deleted.
-        func deleteIncome(_ id: String) async {
+        func deleteIncome(_ income: Income) async {
             do {
-                _ = try await databaseManager.deleteIncome(id: id)
+                _ = try await databaseManager.deleteIncome(income)
                 await fetchIncomes()
             } catch {
                 showError.toggle()

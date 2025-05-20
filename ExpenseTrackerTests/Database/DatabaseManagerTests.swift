@@ -17,7 +17,7 @@ struct DatabaseManagerTests {
     init () async throws {
         clearUserDefaults()
         let database = UserDefaultsDatabase(suiteName: userDefaultsTestSuiteName)
-        databaseManager = DatabaseManager(databaseHandler: DatabaseHandlerImpl(database: database))
+        databaseManager = DatabaseManager(localDatabaseHandler: DatabaseHandler(database: database))
     }
     
     @Test("Fetch empty expenses", .tags(.expense.fetch))

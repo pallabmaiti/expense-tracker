@@ -230,3 +230,16 @@ enum DatabaseType {
         }
     }
 }
+
+/// A namespace for keys used to store data persistently in UserDefaults.
+/// These keys act as identifiers for accessing serialized data blobs.
+enum UserDefaultsDataSourceKey {
+    /// Key used for storing and retrieving expense records.
+    static var expenses = "Expenses"
+    
+    /// Key used for storing and retrieving income records.
+    static var incomes = "Incomes"
+    
+    /// Key used for storing and retrieving user-specific profile or account information.
+    static var userDetails = "UserDetails"
+}

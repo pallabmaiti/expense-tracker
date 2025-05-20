@@ -203,5 +203,5 @@ struct AccountView: View {
 }
 
 #Preview {
-    AccountView(authenticator: FirebaseAuthenticator(), databaseManager: .inMemoryDatabaseManager, notificationManager: .init(center: .init(), settings: InMemoryNotificationSettingsHandler()))
+    AccountView(authenticator: FirebaseAuthenticator(), databaseManager: .initWithInMemory, notificationManager: .init(center: .init(), settings: InMemoryNotificationSettingsHandler()))
 }

@@ -114,7 +114,7 @@ struct VerifyOTPView: View {
         subtitle: "to continue with sign up",
         userProvider: ClerkUserProvider(),
         databaseManager: DatabaseManager(
-            databaseHandler: DatabaseHandlerImpl(
+            databaseHandler: DatabaseHandler(
                 database: InMemoryDatabase()
             )
         )
