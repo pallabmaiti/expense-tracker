@@ -35,6 +35,15 @@ func newTestDatabaseIncome(
     .init(id: id, amount: amount, date: date.formattedString(), source: source.rawValue)
 }
 
+func newTestDatabaseUser(
+    id: String = UUID().uuidString,
+    email: String = "test@example.com",
+    firstName: String = "Test",
+    lastName: String = "User"
+) -> DatabaseUser {
+    .init(id: id, email: email, firstName: firstName, lastName: lastName)
+}
+
 func newTestExpense(
     id: String = UUID().uuidString,
     name: String = "Test Expense",
@@ -53,6 +62,44 @@ func newTestIncome(
     source: ExpenseTracker.Source = .salary
 ) -> Income {
     .init(id: id, amount: amount, source: source, date: date)
+}
+
+func updatedTestExpense(
+    id: String,
+    name: String = "Updated Test Expense",
+    amount: Double = 100.0,
+    date: Date = Date(),
+    category: ExpenseTracker.Category = .other,
+    note: String = "Updated Test Note"
+) -> Expense {
+    .init(id: id, name: name, amount: amount, date: date, category: category, note: note)
+}
+
+func updatedTestIncome(
+    id: String,
+    amount: Double = 10000.0,
+    date: Date = Date(),
+    source: ExpenseTracker.Source = .other
+) -> Income {
+    .init(id: id, amount: amount, source: source, date: date)
+}
+
+func newTestUser(
+    id: String = UUID().uuidString,
+    email: String? = "test@example.com",
+    firstName: String? = "Test",
+    lastName: String? = "User"
+) -> User {
+    .init(id: id, email: email, firstName: firstName, lastName: lastName)
+}
+
+func updatedTestUser(
+    id: String,
+    email: String? = "updated@example.com",
+    firstName: String? = "Updated",
+    lastName: String? = "Test User"
+) -> User {
+    .init(id: id, email: email, firstName: firstName, lastName: lastName)
 }
 
 extension Date {
