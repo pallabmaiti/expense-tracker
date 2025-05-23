@@ -226,7 +226,7 @@ struct TransactionsView: View {
                 Button("Cancel", role: .cancel) { }
                 Button("Delete", role: .destructive) {
                     Task {
-                        await viewModel.deleteExpense(expense.id)
+                        await viewModel.deleteExpense(expense)
                     }
                 }
             } message: { expense in
@@ -238,7 +238,7 @@ struct TransactionsView: View {
                 Button("Cancel", role: .cancel) { }
                 Button("Delete", role: .destructive) {
                     Task {
-                        await viewModel.deleteIncome(income.id)
+                        await viewModel.deleteIncome(income)
                     }
                 }
             } message: { income in
@@ -249,5 +249,5 @@ struct TransactionsView: View {
 }
 
 #Preview {
-    TransactionsView(databaseManager: DatabaseManager(databaseHandler: DatabaseHandlerImpl(database: InMemoryDatabase())))
+    TransactionsView(databaseManager: .initWithInMemory)
 }

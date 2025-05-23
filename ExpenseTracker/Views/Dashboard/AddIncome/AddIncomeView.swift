@@ -86,5 +86,5 @@ struct AddIncomeView: View {
 }
 
 #Preview {
-    AddIncomeView(databaseManager: DatabaseManager(databaseHandler: DatabaseHandlerImpl())) { }
+    AddIncomeView(databaseManager: .initWithInMemory) { }
 }

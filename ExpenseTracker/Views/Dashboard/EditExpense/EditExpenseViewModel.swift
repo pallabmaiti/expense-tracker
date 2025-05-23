@@ -58,12 +58,14 @@ extension EditExpenseView {
         func updateExpense() async -> Bool {
             do {
                 return try await databaseManager.updateExpense(
-                    id: expense.id,
-                    name: name.trimmingCharacters(in: .whitespacesAndNewlines),
-                    amount: amount,
-                    date: date.formattedString(),
-                    category: category.rawValue,
-                    note: note.trimmingCharacters(in: .whitespacesAndNewlines)
+                    .init(
+                        id: expense.id,
+                        name: name.trimmingCharacters(in: .whitespacesAndNewlines),
+                        amount: amount,
+                        date: date,
+                        category: category,
+                        note: note.trimmingCharacters(in: .whitespacesAndNewlines)
+                    )
                 )
             } catch {
                 showError = true
@@ -76,7 +78,7 @@ extension EditExpenseView {
         /// - Returns: A `Bool` indicating success (`true`) or failure (`false`).
         func deleteExpense() async -> Bool {
             do {
-                return try await databaseManager.deleteExpense(id: expense.id)
+                return try await databaseManager.deleteExpense(expense)
             } catch {
                 showError = true
                 errorMessage = error.localizedDescription

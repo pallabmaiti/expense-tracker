@@ -96,10 +96,6 @@ struct SignUpView: View {
 #Preview {
     SignUpView(authenticator: FirebaseAuthenticator()) { } userAuthenticated: { }
         .environment(
-            DatabaseManager(
-                databaseHandler: DatabaseHandlerImpl(
-                    database: InMemoryDatabase()
-                )
-            )
+            DatabaseManager.initWithInMemory
         )
 }

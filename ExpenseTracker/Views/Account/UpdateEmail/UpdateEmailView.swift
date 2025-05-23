@@ -76,5 +76,5 @@ struct UpdateEmailView: View {
 
 
 #Preview {
-    UpdateEmailView(authenticator: FirebaseAuthenticator(), databaseManager: .inMemoryDatabaseManager)
+    UpdateEmailView(authenticator: FirebaseAuthenticator(), databaseManager: .initWithInMemory)
 }

@@ -7,395 +7,250 @@
 
 import Foundation
 
-/// A generic response model for DatabaseQuery responses.
-/// - Note: This struct is useful for wrapping DatabaseQuery responses in a consistent format.
-/// - Parameter T: A type conforming to `Codable` that represents the response data.
-struct Response<T: Codable>: Codable {
-    /// The actual response data of type `T`.
-    let data: T
-}
-
-/// A central manager responsible for coordinating database operations.
-///
-/// The `DatabaseManager` maintains references to a local and (optionally) remote `DatabaseHandler`.
-/// It delegates all database operations to these handlers as needed.
+/// A central manager responsible for coordinating data operations between local and remote repositories.
+/// Supports syncing, CRUD operations, and user data handling for expenses and incomes.
 @Observable
 class DatabaseManager {
     
-    // MARK: - Properties
+    /// Local repository handler (e.g., UserDefaults or in-memory) for managing persistent or temporary data on device.
+    private let localRepositoryHandler: RepositoryHandler
     
-    /// A reference to the `DatabaseHandler` that processes local database requests.
-    ///
-    /// Typically initialized during app startup and used for persistent on-device storage
-    private let localDatabaseHandler: DatabaseHandler
+    /// Optional remote repository handler (e.g., Firestore) for syncing with cloud storage.
+    private var remoteRepositoryHandler: RepositoryHandler?
     
-    /// An optional reference to a remote `DatabaseHandler`, such as Firebase.
-    ///
-    /// This is used when syncing or storing user data in the cloud. It can be dynamically
-    /// initialized or deinitialized based on authentication state.
-    private var remoteDatabaseHandler: DatabaseHandler?
-    
-    // MARK: - Initialization
-    
-    /// Initializes the `DatabaseManager` with a `DatabaseHandler`.
-    ///
-    /// - Parameter databaseHandler: The handler responsible for executing local database operations.
-    init(databaseHandler: DatabaseHandler) {
-        self.localDatabaseHandler = databaseHandler
-        if case let .firebase(userId) = UserDefaults.standard.databaseType {
-            self.remoteDatabaseHandler = DatabaseHandlerImpl(database: FirebaseDatabase(userId: userId))
-        }
-    }
-        
-    /// Assigns a `DatabaseHandler` to be used as the remote handler.
-    ///
-    /// This is typically called after user authentication to enable cloud data syncing.
-    ///
-    /// - Parameter databaseHandler: The remote database handler (e.g., Firebase).
-    func initializeRemoteDatabaseHandler(_ databaseHandler: DatabaseHandler) {
-        self.remoteDatabaseHandler = databaseHandler
+    /// Initializes the database manager with a local data source.
+    init(localRepositoryHandler: RepositoryHandler) {
+        self.localRepositoryHandler = localRepositoryHandler
     }
     
-    /// Clears the reference to the remote `DatabaseHandler`.
-    ///
-    /// This is typically called during sign-out to stop cloud-based operations.
-    func deinitializeRemoteDatabaseHandler() {
-        self.remoteDatabaseHandler = nil
+    /// Sets up the remote repository handler to enable cloud syncing.
+    func initializeRemoteRepositoryHandler(_ repositoryHandler: RepositoryHandler) {
+        self.remoteRepositoryHandler = repositoryHandler
     }
-
-    /// Fetches all expenses from the database.
-    /// - Returns: An `Array` containing `Expense` objects
-    /// - Throws: An `Error` if the operation failed.
+    
+    /// Clears the remote repository handler. Useful on logout or offline scenarios.
+    func deinitializeRemoteRepositoryHandler() {
+        self.remoteRepositoryHandler = nil
+    }
+    
+    /// Fetches expenses from local storage first.
+    /// If local storage is empty and remote is available, fetches from remote and syncs locally.
     func fetchExpenses() async throws -> [Expense] {
-        let (localResult, remoteResult) = try await (localDatabaseHandler.request(.getExpenses), remoteDatabaseHandler?.request(.getExpenses))
-        
-        let localExpenses: [Expense] = try handleResponse(localResult)
-        if let remoteResult {
-            let remoteExpenses: [Expense] = try handleResponse(remoteResult)
-            await syncRemoteWithLocal(localExpenses: localExpenses, remoteExpenses: remoteExpenses)
+        let localExpenses = try await localRepositoryHandler.fetchExpenses()
+        if localExpenses.isNotEmpty {
+            return localExpenses
+        } else {
+            guard let remoteRepositoryHandler else {
+                return []
+            }
+            let remoteExpenses = try await remoteRepositoryHandler.fetchExpenses()
+            await syncLocalWithRemoteExpenses(remoteExpenses)
+            return remoteExpenses
         }
-        
-        return localExpenses
     }
     
-    /// Saves a new expense to the database.
-    /// - Parameters:
-    ///   - id: The unique identifier of the expense.
-    ///   - name: The name or description of the expense.
-    ///   - amount: The amount spent.
-    ///   - date: The date of the expense in `yyyy-MM-dd` format.
-    ///   - category: The category of the expense.
-    ///   - note: Additional details about the expense.
-    /// - Returns: A `Bool` with `true` if the expense was saved successfully.
-    /// - Throws: An `Error` if the operation failed.
+    /// Saves the given expense to both local and remote (if available) repositories.
     @discardableResult
-    func saveExpense(id: String, name: String, amount: Double, date: String, category: String, note: String) async throws -> Bool {
-        async let localExpensesData = localDatabaseHandler.request(.addExpense(id, name, amount, date, category, note))
-        async let remoteExpensesData = remoteDatabaseHandler?.request(.addExpense(id, name, amount, date, category, note))
-        
-        let (localResult, _) = try await (localExpensesData, remoteExpensesData)
-        
-        return try handleResponse(localResult)
+    func saveExpense(_ expense: Expense) async throws -> Bool {
+        try await localRepositoryHandler.saveExpense(expense)
+        try await remoteRepositoryHandler?.saveExpense(expense)
+        return true
     }
     
-    /// Deletes an expense from the database.
-    /// - Parameters:
-    ///   - id: The unique identifier of the expense to delete.
-    /// - Returns: A `Bool` with `true` if the expense was deleted successfully.
-    /// - Throws: An `Error` if the operation failed.
+    /// Deletes the given expense from both local and remote (if available) repositories.
     @discardableResult
-    func deleteExpense(id: String) async throws -> Bool {
-        let (localResult, _) = try await (localDatabaseHandler.request(.deleteExpense(id)), remoteDatabaseHandler?.request(.deleteExpense(id)))
-        return try handleResponse(localResult)
+    func deleteExpense(_ expense: Expense) async throws -> Bool {
+        try await localRepositoryHandler.deleteExpense(expense)
+        try await remoteRepositoryHandler?.deleteExpense(expense)
+        return true
     }
     
-    /// Updates an existing expense in the database.
-    /// - Parameters:
-    ///   - id: The unique identifier of the expense to update.
-    ///   - name: The updated name or description of the expense.
-    ///   - amount: The updated amount spent.
-    ///   - date: The updated date of the expense in `yyyy-MM-dd` format.
-    ///   - category: The updated category of the expense.
-    ///   - note: The updated details about the expense.
-    /// - Returns: A `Bool` with `true` if the update was successful.
-    /// - Throws: An `Error` if the operation failed.
+    /// Updates the given expense in both local and remote (if available) repositories.
     @discardableResult
-    func updateExpense(id: String, name: String, amount: Double, date: String, category: String, note: String) async throws -> Bool {
-        let (localResult, _) = try await (localDatabaseHandler.request(.updateExpense(id, name, amount, date, category, note)), remoteDatabaseHandler?.request(.updateExpense(id, name, amount, date, category, note)))
-        return try handleResponse(localResult)
+    func updateExpense(_ expense: Expense) async throws -> Bool {
+        try await localRepositoryHandler.updateExpense(expense)
+        try await remoteRepositoryHandler?.updateExpense(expense)
+        return true
     }
     
-    /// Deletes all stored expenses from the database.
-    /// - Returns: A `Bool` with `true` if all expenses were deleted successfully.
-    /// - Throws: An `Error` if the operation failed.
+    /// Deletes all expenses from both local and remote (if available) repositories.
     @discardableResult
     func deleteAllExpenses() async throws -> Bool {
-        let (localResult, _) = try await (localDatabaseHandler.request(.deleteAllExpenses), remoteDatabaseHandler?.request(.deleteAllExpenses))
-        return try handleResponse(localResult)
+        try await localRepositoryHandler.deleteAllExpenses()
+        try await remoteRepositoryHandler?.deleteAllExpenses()
+        return true
     }
     
-    /// Fetches all income records from the database.
-    /// - Returns: An `Array` containing `Income` objects
-    /// - Throws: An `Error` if the operation failed.
+    /// Fetches incomes from local storage first.
+    /// If local is empty and remote is available, fetches from remote and syncs locally.
     func fetchIncomes() async throws -> [Income] {
-        let (localResult, remoteResult) = try await (localDatabaseHandler.request(.getIncomes), remoteDatabaseHandler?.request(.getIncomes))
-        let localIncomes: [Income] = try handleResponse(localResult)
-        if let remoteResult {
-            let remoteIncomes: [Income] = try handleResponse(remoteResult)
-            await syncRemoteWithLocal(localIncomes: localIncomes, remoteIncomes: remoteIncomes)
+        let localIncomes = try await localRepositoryHandler.fetchIncomes()
+        if localIncomes.isNotEmpty {
+            return localIncomes
+        } else {
+            guard let remoteRepositoryHandler else {
+                return []
+            }
+            let remoteIncomes = try await remoteRepositoryHandler.fetchIncomes()
+            await syncLocalWithRemoteIncomes(remoteIncomes)
+            return remoteIncomes
         }
-        return localIncomes
     }
     
-    /// Saves a new income entry to the database.
-    /// - Parameters:
-    ///   - id: The unique identifier of the income.
-    ///   - amount: The amount of income.
-    ///   - date: The date of the income entry in string format.
-    ///   - source: The source of income as a string.
-    /// - Returns: A `Bool` with `true` if the income was saved successfully.
-    /// - Throws: An `Error` if the operation failed.
+    /// Saves the given income to both local and remote (if available) repositories.
     @discardableResult
-    func saveIncome(id: String, amount: Double, date: String, source: String) async throws -> Bool {
-        let (localResult, _) = try await (localDatabaseHandler.request(.addIncome(id, amount, date, source)), remoteDatabaseHandler?.request(.addIncome(id, amount, date, source)))
-        return try handleResponse(localResult)
+    func saveIncome(_ income: Income) async throws -> Bool {
+        try await localRepositoryHandler.saveIncome(income)
+        try await remoteRepositoryHandler?.saveIncome(income)
+        return true
     }
     
-    /// Updates an existing income entry in the database.
-    /// - Parameters:
-    ///   - id: The unique identifier of the income entry to update.
-    ///   - amount: The new amount of income.
-    ///   - date: The updated date of the income entry in string format.
-    ///   - source: The updated source of income as a string.
-    /// - Returns: A `Bool` with `true` if the update was successful.
-    /// - Throws: An `Error` if the operation failed.
+    /// Updates the given income in both local and remote (if available) repositories.
     @discardableResult
-    func updateIncome(id: String, amount: Double, date: String, source: String) async throws -> Bool {
-        let (localResult, _) = try await (localDatabaseHandler.request(.updateIncome(id, amount, date, source)), remoteDatabaseHandler?.request(.updateIncome(id, amount, date, source)))
-        return try handleResponse(localResult)
+    func updateIncome(_ income: Income) async throws -> Bool {
+        try await localRepositoryHandler.updateIncome(income)
+        try await remoteRepositoryHandler?.updateIncome(income)
+        return true
     }
     
-    /// Deletes a specific income entry from the database.
-    /// - Parameter id: The unique identifier of the income entry to delete.
-    /// - Returns: A `Bool` with `true` if the income was deleted successfully.
-    /// - Throws: An `Error` if the operation failed.
+    /// Deletes the given income from both local and remote (if available) repositories.
     @discardableResult
-    func deleteIncome(id: String) async throws -> Bool {
-        let (localResult, _) = try await (localDatabaseHandler.request(.deleteIncome(id)), remoteDatabaseHandler?.request(.deleteIncome(id)))
-        return try handleResponse(localResult)
+    func deleteIncome(_ income: Income) async throws -> Bool {
+        try await localRepositoryHandler.deleteIncome(income)
+        try await remoteRepositoryHandler?.deleteIncome(income)
+        return true
     }
     
-    /// Deletes all income records from the database.
-    /// - Returns: A `Bool` with `true` if all incomes were deleted successfully
-    /// - Throws: An `Error` if the operation failed.
+    /// Deletes all incomes from both local and remote (if available) repositories.
     @discardableResult
     func deleteAllIncomes() async throws -> Bool {
-        let (localResult, _) = try await (localDatabaseHandler.request(.deleteAllIncome), remoteDatabaseHandler?.request(.deleteAllIncome))
-        return try handleResponse(localResult)
+        try await localRepositoryHandler.deleteAllIncomes()
+        try await remoteRepositoryHandler?.deleteAllIncomes()
+        return true
     }
     
-    /// Synchronize both incomes and expenses from remote to local.
+    /// Syncs all data (incomes and expenses) from remote to local.
     func syncLocalWithRemote() async {
         await syncLocalIncomesWithRemote()
         await syncLocalExpensesWithRemote()
     }
     
-    /// Synchronizes expenses from the remote database to the local database.
-    /// It checks for any expenses present in remote but missing in local and adds them.
+    /// Synchronizes missing remote expenses into the local repository.
     private func syncLocalExpensesWithRemote() async {
         do {
-            if let remoteResult = try await remoteDatabaseHandler?.request(.getExpenses) {
-                let remoteExpenses: [Expense] = try handleResponse(remoteResult)
-                let localResult = try await localDatabaseHandler.request(.getExpenses)
-                let localExpenses: [Expense] = try handleResponse(localResult)
-                let localExpenseSet = Set(localExpenses.map { $0.id })
-                for expense in remoteExpenses where !localExpenseSet.contains(expense.id) {
-                    _ = try await localDatabaseHandler.request(
-                        .addExpense(
-                            expense.id,
-                            expense.name,
-                            expense.amount,
-                            expense.date,
-                            expense.category.rawValue,
-                            expense.note
-                        )
-                    )
-                }
+            guard let remoteRepositoryHandler else { return }
+            let remoteExpenses = try await remoteRepositoryHandler.fetchExpenses()
+            let localExpenses = try await localRepositoryHandler.fetchExpenses()
+            
+            let localExpenseSet = Set(localExpenses.map { $0.id })
+            for expense in remoteExpenses where !localExpenseSet.contains(expense.id) {
+                try await localRepositoryHandler.saveExpense(expense)
             }
         } catch {
             print("Error synchronizing local expenses with remote: \(error.localizedDescription)")
         }
     }
     
-    /// Synchronizes incomes from the remote database to the local database.
-    /// Only incomes missing in local are added.
+    /// Synchronizes missing remote incomes into the local repository.
     private func syncLocalIncomesWithRemote() async {
         do {
-            if let remoteResult = try await remoteDatabaseHandler?.request(.getIncomes) {
-                let remoteIncomes: [Income] = try handleResponse(remoteResult)
-                let localResult = try await localDatabaseHandler.request(.getIncomes)
-                let localIncomes: [Income] = try handleResponse(localResult)
-                let localIncomeSet = Set(localIncomes.map { $0.id })
-                for income in remoteIncomes where !localIncomeSet.contains(income.id) {
-                    _ = try await localDatabaseHandler.request(
-                        .addIncome(
-                            income.id,
-                            income.amount,
-                            income.date,
-                            income.source.rawValue
-                        )
-                    )
-                }
+            guard let remoteRepositoryHandler else { return }
+            let remoteIncomes = try await remoteRepositoryHandler.fetchIncomes()
+            let localIncomes = try await localRepositoryHandler.fetchIncomes()
+            
+            let localIncomeSet = Set(localIncomes.map { $0.id })
+            for income in remoteIncomes where !localIncomeSet.contains(income.id) {
+                try await localRepositoryHandler.saveIncome(income)
             }
         } catch {
             print("Error synchronizing local incomes with remote: \(error.localizedDescription)")
         }
     }
     
-    /// Synchronize both incomes and expenses from local to remote.
+    /// Syncs all data (incomes and expenses) from local to remote.
     func syncRemoteWithLocal() async {
         await syncRemoteExpensesWithLocal()
         await syncRemoteIncomesWithLocal()
     }
     
-    /// Synchronizes expenses from the local database to the remote database.
-    /// Expenses found in local but missing remotely are pushed to the remote database.
+    /// Synchronizes missing local expenses into the remote repository.
     private func syncRemoteExpensesWithLocal() async {
         do {
-            var remoteExpenses: [Expense] = []
-            if let remoteResult = try await remoteDatabaseHandler?.request(.getExpenses) {
-                remoteExpenses = try handleResponse(remoteResult)
+            guard let remoteRepositoryHandler else { return }
+            let remoteExpenses = try await remoteRepositoryHandler.fetchExpenses()
+            let localExpenses = try await localRepositoryHandler.fetchExpenses()
+            
+            let remoteExpenseSet = Set(remoteExpenses.map { $0.id })
+            for expense in localExpenses where !remoteExpenseSet.contains(expense.id) {
+                try await remoteRepositoryHandler.saveExpense(expense)
             }
-            let localResult = try await localDatabaseHandler.request(.getExpenses)
-            let localExpenses: [Expense] = try handleResponse(localResult)
-            await syncRemoteWithLocal(localExpenses: localExpenses, remoteExpenses: remoteExpenses)
         } catch {
             print("Error synchronizing remote with local expenses: \(error.localizedDescription)")
         }
     }
     
-    /// Synchronizes incomes from the local database to the remote database.
-    /// Incomes found in local but not in remote are pushed.
+    /// Synchronizes missing local incomes into the remote repository.
     private func syncRemoteIncomesWithLocal() async {
         do {
-            var remoteIncomes: [Income] = []
-            if let remoteResult = try await remoteDatabaseHandler?.request(.getIncomes) {
-                remoteIncomes = try handleResponse(remoteResult)
+            guard let remoteRepositoryHandler else { return }
+            let remoteIncomes = try await remoteRepositoryHandler.fetchIncomes()
+            let localIncomes = try await localRepositoryHandler.fetchIncomes()
+            
+            let remoteIncomeSet = Set(remoteIncomes.map { $0.id })
+            for income in localIncomes where !remoteIncomeSet.contains(income.id) {
+                try await remoteRepositoryHandler.saveIncome(income)
             }
-            let localResult = try await localDatabaseHandler.request(.getIncomes)
-            let localIncomes: [Income] = try handleResponse(localResult)
-            await syncRemoteWithLocal(localIncomes: localIncomes, remoteIncomes: remoteIncomes)
         } catch {
             print("Error synchronizing remote with local incomes: \(error.localizedDescription)")
         }
     }
     
-    /// Synchronizes expenses from the local database to the remote database.
+    /// Saves remote expenses to the local repository.
     ///
-    /// This function compares local and remote expenses using their `id`s and uploads
-    /// any local expense that does not exist in the remote store.
-    ///
-    /// - Parameters:
-    ///   - localExpenses: An array of `Expense` objects stored locally.
-    ///   - remoteExpenses: An array of `Expense` objects fetched from the remote source.
-    private func syncRemoteWithLocal(localExpenses: [Expense], remoteExpenses: [Expense]) async {
-        // Create a set of remote expense IDs for fast lookup.
-        let remoteExpenseSet = Set(remoteExpenses.map { $0.id })
-        
-        // Iterate over each local expense and sync it if it's missing remotely.
-        for expense in localExpenses where !remoteExpenseSet.contains(expense.id) {
+    /// - Parameter remoteExpenses: List of expenses fetched from the remote store.
+    private func syncLocalWithRemoteExpenses(_ remoteExpenses: [Expense]) async {
+        for expense in remoteExpenses {
             do {
-                _ = try await remoteDatabaseHandler?.request(
-                    .addExpense(
-                        expense.id,
-                        expense.name,
-                        expense.amount,
-                        expense.date,
-                        expense.category.rawValue,
-                        expense.note
-                    )
-                )
+                try await localRepositoryHandler.saveExpense(expense)
             } catch {
-                print("Error synchronizing remote with local expenses: \(error.localizedDescription)")
-            }
-        }
-    }
-
-    /// Synchronizes incomes from the local database to the remote database.
-    ///
-    /// This function compares local and remote incomes using their `id`s and uploads
-    /// any local income that does not exist in the remote store.
-    ///
-    /// - Parameters:
-    ///   - localIncomes: An array of `Income` objects stored locally.
-    ///   - remoteIncomes: An array of `Income` objects fetched from the remote source.
-    private func syncRemoteWithLocal(localIncomes: [Income], remoteIncomes: [Income]) async {
-        // Create a set of remote income IDs for fast lookup.
-        let remoteIncomeSet = Set(remoteIncomes.map { $0.id })
-        
-        // Iterate over each local income and sync it if it's missing remotely.
-        for income in localIncomes where !remoteIncomeSet.contains(income.id) {
-            do {
-                _ = try await remoteDatabaseHandler?.request(
-                    .addIncome(
-                        income.id,
-                        income.amount,
-                        income.date,
-                        income.source.rawValue
-                    )
-                )
-            } catch {
-                print("Error synchronizing remote with local incomes: \(error.localizedDescription)")
+                print("Error synchronizing local with remote expenses: \(error.localizedDescription)")
             }
         }
     }
     
+    /// Saves remote incomes to the local repository.
+    ///
+    /// - Parameter remoteIncomes: List of incomes fetched from the remote store.
+    private func syncLocalWithRemoteIncomes(_ remoteIncomes: [Income]) async {
+        for income in remoteIncomes {
+            do {
+                try await localRepositoryHandler.saveIncome(income)
+            } catch {
+                print("Error synchronizing local with remote incomes: \(error.localizedDescription)")
+            }
+        }
+    }
     
+    /// Syncs user details. If remote user exists, it updates or saves locally.
+    /// If remote does not exist, uses provided user to initialize local data.
     func syncUserDetails(_ user: User) async {
         do {
-            let (localResult, remoteResult) = try await (localDatabaseHandler.request(.fetchUserDetails), remoteDatabaseHandler?.request(.fetchUserDetails))
-            let localUser: User? = try handleResponse(localResult)
-            if let remoteResult,
-               let remoteUser: User? = try handleResponse(remoteResult),
-               let remoteUser {
+            let (localUser, remoteUser) = try await (
+                localRepositoryHandler.fetchUser(),
+                remoteRepositoryHandler?.fetchUser()
+            )
+            
+            if let remoteUser {
                 if localUser == nil {
-                    _ = try await localDatabaseHandler.request(
-                        .saveUserDetails(
-                            remoteUser.id,
-                            remoteUser.email ?? "",
-                            remoteUser.firstName ?? "",
-                            remoteUser.lastName ?? ""
-                        )
-                    )
+                    try await localRepositoryHandler.saveUser(remoteUser)
                 } else {
-                    _ = try await localDatabaseHandler.request(
-                        .updateUserDetails(
-                            remoteUser.id,
-                            remoteUser.email ?? "",
-                            remoteUser.firstName ?? "",
-                            remoteUser.lastName ?? ""
-                        )
-                    )
+                    try await localRepositoryHandler.updateUser(remoteUser)
                 }
             } else {
                 if localUser == nil {
-                    _ = try await localDatabaseHandler.request(
-                        .saveUserDetails(
-                            user.id,
-                            user.email,
-                            user.firstName,
-                            user.lastName
-                        )
-                    )
+                    try await localRepositoryHandler.saveUser(user)
                 } else {
-                    _ = try await localDatabaseHandler.request(
-                        .updateUserDetails(
-                            user.id,
-                            user.email,
-                            user.firstName,
-                            user.lastName
-                        )
-                    )
+                    try await localRepositoryHandler.updateUser(user)
                 }
             }
         } catch {
@@ -403,68 +258,40 @@ class DatabaseManager {
         }
     }
     
-    /// Fetch user details from database.
+    /// Fetches user details from local store, or from remote if local is empty.
     func fetchUserDetails() async throws -> User? {
-        let (localResult, remoteResult) = try await (localDatabaseHandler.request(.fetchUserDetails), remoteDatabaseHandler?.request(.fetchUserDetails))
-        let localUser: User? = try handleResponse(localResult)
-        if localUser == nil, let remoteResult {
-            let remoteUser: User? = try handleResponse(remoteResult)
-            if let remoteUser {
-                _ = try await localDatabaseHandler.request(.saveUserDetails(remoteUser.id, remoteUser.email, remoteUser.firstName, remoteUser.lastName))
+        let localUser = try await localRepositoryHandler.fetchUser()
+        if localUser == nil {
+            if let remoteRepositoryHandler {
+                return try await remoteRepositoryHandler.fetchUser()
+            } else {
+                return nil
             }
-            return remoteUser
+        } else {
+            return localUser
         }
-        return localUser
     }
     
-    /// Update existing user details in the database.
-    /// - Parameters:
-    ///   - id: The unique identifier of the user.
-    ///   - email: The email address of the user.
-    ///   - firstName: The first name of the user.
-    ///   - lastName: The last name of the user.
+    /// Updates user details in both local and remote (if available) repositories.
     @discardableResult
-    func updateUserDetails(id: String, email: String?, firstName: String?, lastName: String?) async throws -> Bool {
-        let (localResult, _) = try await (localDatabaseHandler.request(.updateUserDetails(id, email, firstName, lastName)), remoteDatabaseHandler?.request(.updateUserDetails(id, email, firstName, lastName)))
-        return try handleResponse(localResult)
+    func updateUserDetails(_ user: User) async throws -> Bool {
+        try await localRepositoryHandler.updateUser(user)
+        try await remoteRepositoryHandler?.updateUser(user)
+        return true
     }
     
-    /// Save user details in the database.
-    /// - Parameters:
-    ///   - id: The unique identifier of the user.
-    ///   - email: The email address of the user.
-    ///   - firstName: The first name of the user.
-    ///   - lastName: The last name of the user.
+    /// Saves user details to both local and remote (if available) repositories.
     @discardableResult
-    func saveUserDetails(id: String, email: String?, firstName: String?, lastName: String?) async throws -> Bool {
-        let localSaveUserDetailsResult = try await localDatabaseHandler.request(.saveUserDetails(id, email, firstName, lastName))
-        
-        if let remoteFetchUserDetails = try await remoteDatabaseHandler?.request(.fetchUserDetails) {
-            let remoteuser: User? = try handleResponse(remoteFetchUserDetails)
-            if remoteuser == nil {
-                _ = try await remoteDatabaseHandler?.request(.saveUserDetails(id, email, firstName, lastName))
-            }
-        }
-        
-        return try handleResponse(localSaveUserDetailsResult)
+    func saveUserDetails(_ user: User) async throws -> Bool {
+        try await localRepositoryHandler.saveUser(user)
+        try await remoteRepositoryHandler?.saveUser(user)
+        return true
     }
     
-    /// Clear user details from local database.
-    /// - Parameter id: The unique identifier of the user.
+    /// Clears user details from local storage.
     @discardableResult
-    func clearLocalUserDetails(id: String) async throws -> Bool {
-        let localResult = try await localDatabaseHandler.request(.clearUserDetails(id))
-        return try handleResponse(localResult)
+    func clearLocalUserDetails(_ user: User) async throws -> Bool {
+        try await localRepositoryHandler.deleteUser(user)
+        return true
     }
-    
-    /// Generic method to handle response decoding.
-    private func handleResponse<T: Codable>(_ data: Data) throws -> T {
-        let response = try JSONDecoder().decode(Response<T>.self, from: data)
-        return response.data
-    }
-}
-
-extension DatabaseManager {
-    static let userDefaultsDatabaseManager = DatabaseManager(databaseHandler: DatabaseHandlerImpl())
-    static let inMemoryDatabaseManager = DatabaseManager(databaseHandler: DatabaseHandlerImpl(database: InMemoryDatabase()))
 }

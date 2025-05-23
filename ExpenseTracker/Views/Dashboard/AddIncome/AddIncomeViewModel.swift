@@ -48,7 +48,7 @@ extension AddIncomeView {
         /// - Returns: A `Bool` indicating success or failure. If successful, it returns `true`; otherwise, `false`.
         func addIncome() async -> Bool {
             do {
-                return try await databaseManager.saveIncome(id: UUID().uuidString, amount: amount, date: date.formattedString(), source: source.rawValue)
+                return try await databaseManager.saveIncome(.init(id: UUID().uuidString, amount: amount, source: source, date: date))
             } catch {
                 self.showError = true
                 self.errorMessage = error.localizedDescription

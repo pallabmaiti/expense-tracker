@@ -93,9 +93,9 @@ extension DashboardView {
         /// Deletes an expense by its identifier.
         /// - Parameters:
         ///   - id: The identifier of the expense to be deleted.
-        func deleteExpense(id: String) async {
+        func deleteExpense(_ expense: Expense) async {
             do {
-                _ = try await databaseManager.deleteExpense(id: id)
+                _ = try await databaseManager.deleteExpense(expense)
                 await fetchExpenses()
             } catch {
                 showError = true
@@ -106,9 +106,9 @@ extension DashboardView {
         /// Deletes an income by its identifier.
         /// - Parameters:
         ///   - id: The identifier of the income to be deleted.
-        func deleteIncome(id: String) async {
+        func deleteIncome(_ income: Income) async {
             do {
-                _ = try await databaseManager.deleteIncome(id: id)
+                _ = try await databaseManager.deleteIncome(income)
                 await fetchIncomes()
             } catch {
                 showError = true

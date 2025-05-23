@@ -83,10 +83,12 @@ extension AccountView {
             guard let user else { return }
             do {
                 _ = try await databaseManager.updateUserDetails(
-                    id: user.id,
-                    email: user.email,
-                    firstName: firstName,
-                    lastName: lastName
+                    .init(
+                        id: user.id,
+                        email: user.email,
+                        firstName: firstName,
+                        lastName: lastName
+                    )
                 )
                 await fetchUserDetails() // Refresh local state
             } catch {
@@ -101,9 +103,9 @@ extension AccountView {
                 try authenticator.signOut()
                 UserDefaults.standard.databaseType = .local
                 UserDefaults.standard.isSignedIn = false
-                databaseManager.deinitializeRemoteDatabaseHandler()
+                databaseManager.deinitializeRemoteRepositoryHandler()
                 if let user {
-                    try await databaseManager.clearLocalUserDetails(id: user.id)
+                    try await databaseManager.clearLocalUserDetails(user)
                 }
             } catch {
                 errorMessage = error.localizedDescription

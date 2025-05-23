@@ -129,5 +129,5 @@ struct EditIncomeView: View {
 }
 
 #Preview {
-    EditIncomeView(income: .sample, databaseManager: DatabaseManager(databaseHandler: DatabaseHandlerImpl())) { }
+    EditIncomeView(income: .sample, databaseManager: .initWithInMemory) { }
 }
