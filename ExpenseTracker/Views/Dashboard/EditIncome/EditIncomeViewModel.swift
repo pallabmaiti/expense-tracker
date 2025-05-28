@@ -23,6 +23,7 @@ extension EditIncomeView {
         var amount: Double
         var source: Source
         var date: Date
+        var note: String
         
         /// Error message to display in case of an error.
         var errorMessage: String = ""
@@ -45,6 +46,7 @@ extension EditIncomeView {
             self.amount = income.amount
             self.source = income.source
             self.date = income.formattedDate
+            self.note = income.note
         }
         
         // MARK: - Public Methods
@@ -53,7 +55,8 @@ extension EditIncomeView {
         /// - Returns: A `Bool` indicating success (`true`) or failure (`false`).
         func updateIncome() async -> Bool {
             do {
-                return try await databaseManager.updateIncome(.init(id: income.id, amount: amount, source: source, date: date))
+                let updatedNote = source == .other ? note : ""
+                return try await databaseManager.updateIncome(.init(id: income.id, amount: amount, source: source, date: date, note: updatedNote))
             } catch {
                 showError = true
                 errorMessage = error.localizedDescription

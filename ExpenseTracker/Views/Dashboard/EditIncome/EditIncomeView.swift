@@ -56,6 +56,15 @@ struct EditIncomeView: View {
                     .labelsHidden()
                 }
                 
+                if viewModel.source == .other {
+                    HStack {
+                        Text("Note")
+                        Spacer()
+                        TextField("Note", text: $viewModel.note)
+                            .multilineTextAlignment(.trailing)
+                    }
+                }
+                
                 // Date picker
                 DatePicker("Date", selection: $viewModel.date, displayedComponents: .date)
                 

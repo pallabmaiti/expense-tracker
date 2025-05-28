@@ -46,6 +46,15 @@ struct AddIncomeView: View {
                     .labelsHidden()
                 }
                 
+                if viewModel.source == .other {
+                    HStack {
+                        Text("Note")
+                        Spacer()
+                        TextField("Note", text: $viewModel.note)
+                            .multilineTextAlignment(.trailing)
+                    }
+                }
+                
                 // Date picker: Allows the user to select the date for the income.
                 DatePicker("Date", selection: $viewModel.date, displayedComponents: .date)
             }

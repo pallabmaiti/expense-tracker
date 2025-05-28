@@ -21,6 +21,9 @@ protocol Transaction: Identifiable, Codable {
     /// - Format: `"yyyy-MM-dd"` (Default format).
     var date: String { get }
     
+    /// Any additional notes or remarks about the transaction.
+    var note: String { get }
+
     /// A computed property that converts the string-based date into a `Date` object.
     var formattedDate: Date { get }
 }

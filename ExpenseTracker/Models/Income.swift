@@ -32,11 +32,15 @@ struct Income: Transaction {
     /// The stored date in string format.
     let date: String
     
+    /// Any additional notes or remarks about the income.
+    let note: String
+    
     enum CodingKeys: String, CodingKey {
         case id
         case amount
         case _source = "source"
         case date
+        case note
     }
     
     /// Initializes a new `Income` instance.
@@ -45,11 +49,13 @@ struct Income: Transaction {
     ///   - amount: The amount of income received.
     ///   - source: The category of the income.
     ///   - date: The date when the income was received.
-    init(id: String, amount: Double, source: Source, date: Date) {
+    ///   - note: Additional notes about the income.
+    init(id: String, amount: Double, source: Source, date: Date, note: String) {
         self.id = id
         self.amount = amount
         self._source = source.rawValue
         self.date = date.formattedString()
+        self.note = note
     }
 }
 
@@ -59,7 +65,8 @@ extension Income {
             id: UUID().uuidString,
             amount: 10000.0,
             source: .salary,
-            date: Date()
+            date: Date(),
+            note: ""
         )
     }
 }
