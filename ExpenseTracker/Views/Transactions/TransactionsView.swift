@@ -191,7 +191,9 @@ struct TransactionsView: View {
             .sheet(item: $viewModel.expenseToUpdate) { item in
                 EditExpenseView(expense: item, databaseManager: databaseManager) {
                     Task {
+                        viewModel.clearAllTransactions()
                         await viewModel.fetchExpenses()
+                        await viewModel.fetchIncomes()
                     }
                 }
             }
@@ -200,6 +202,8 @@ struct TransactionsView: View {
             .sheet(item: $viewModel.incomeToUpdate) { item in
                 EditIncomeView(income: item, databaseManager: databaseManager) {
                     Task {
+                        viewModel.clearAllTransactions()
+                        await viewModel.fetchExpenses()
                         await viewModel.fetchIncomes()
                     }
                 }
