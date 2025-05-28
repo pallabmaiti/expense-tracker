@@ -138,7 +138,9 @@ extension TransactionsView {
         func deleteExpense(_ expense: Expense) async {
             do {
                 _ = try await databaseManager.deleteExpense(expense)
+                clearAllTransactions()
                 await fetchExpenses()
+                await fetchIncomes()
             } catch {
                 showError.toggle()
                 errorMessage = error.localizedDescription
@@ -151,6 +153,8 @@ extension TransactionsView {
         func deleteIncome(_ income: Income) async {
             do {
                 _ = try await databaseManager.deleteIncome(income)
+                clearAllTransactions()
+                await fetchExpenses()
                 await fetchIncomes()
             } catch {
                 showError.toggle()

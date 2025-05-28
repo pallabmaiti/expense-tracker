@@ -63,7 +63,8 @@ extension Income {
             id: id,
             amount: amount,
             date: date,
-            source: source.rawValue
+            source: source.rawValue,
+            note: note
         )
     }
 }
@@ -76,7 +77,8 @@ extension DatabaseIncome {
             id: id,
             amount: amount,
             source: Source(rawValue: source) ?? .other,
-            date: date.toDate()
+            date: date.toDate(),
+            note: note
         )
     }
 }

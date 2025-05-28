@@ -26,6 +26,7 @@ extension AddIncomeView {
         var amount: Double = 0
         var date: Date = Date()
         var source: Source = .salary
+        var note: String = ""
 
         // MARK: - Private Properties
 
@@ -48,7 +49,7 @@ extension AddIncomeView {
         /// - Returns: A `Bool` indicating success or failure. If successful, it returns `true`; otherwise, `false`.
         func addIncome() async -> Bool {
             do {
-                return try await databaseManager.saveIncome(.init(id: UUID().uuidString, amount: amount, source: source, date: date))
+                return try await databaseManager.saveIncome(.init(id: UUID().uuidString, amount: amount, source: source, date: date, note: note))
             } catch {
                 self.showError = true
                 self.errorMessage = error.localizedDescription
