@@ -15,22 +15,25 @@ extension AddExpenseView {
     @Observable
     class ViewModel {
         // MARK: - Public Properties
-
+        
         /// Boolean flags for displaying error and delete confirmation alerts.
         var showError: Bool = false
-
+        
         /// Error message to display in case of an error.
         var errorMessage: String = ""
-
+        
+        /// Boolean flags for displaying description of expense category.
+        var showInfo: Bool = false
+        
         // State properties for handling user input.
         var amount: Double = 0
         var category: Category = .food
         var date: Date = Date()
         var name: String = ""
         var note: String = ""
-
+        
         // MARK: - Private Properties
-
+        
         /// The database manager responsible for handling database operations.
         private let databaseManager: DatabaseManager
         
@@ -42,7 +45,7 @@ extension AddExpenseView {
         }
         
         // MARK: - Public Methods
-
+        
         /// Adds an expense by calling the `saveExpense` method of the `databaseManager`.
         ///
         /// This method accepts the necessary expense details (name, amount, date, category, and note) and passes them to the database manager to be saved.

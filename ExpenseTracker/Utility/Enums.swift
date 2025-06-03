@@ -59,7 +59,7 @@ enum Ordering {
     /// - For numbers: lower values appear first (e.g., 100 → 1000).
     /// - Typical use cases: chronological views, trend analysis, budgeting over time.
     case ascending
-
+    
     /// Descending order.
     ///
     /// - For dates: later dates appear first (e.g., Dec → Jan).
@@ -113,39 +113,146 @@ enum Source: String, CaseIterable, Codable {
     case other = "Other"
 }
 
-/// An enumeration representing different categories of expenses in the expense tracker application.
+extension Source {
+    var iconName: String {
+        switch self {
+        case .salary:
+            return "briefcase.fill"
+        case .interest:
+            return "banknote.fill"
+        case .rental:
+            return "building.columns.fill"
+        case .business:
+            return "person.2.wave.2.fill"
+        case .other:
+            return "gift.fill"
+        }
+    }
+}
+
+/// Represents the different categories of income or expense used in budgeting and financial tracking.
 ///
-/// Each case corresponds to a specific type of expense that users can assign to their transactions.
-/// Categorizing expenses helps users gain insights into their spending habits and enables better budgeting and financial planning.
+/// This enum is `CaseIterable`, allowing easy iteration over all available cases (e.g., for use in dropdown menus or pickers),
+/// and conforms to `Codable`, enabling seamless encoding and decoding to/from JSON or other formats.
 ///
-/// This enum conforms to:
-/// - `String` raw values for easy display and storage.
-/// - `CaseIterable` to allow iteration over all available categories (e.g., for populating dropdowns or pickers).
-/// - `Codable` to support encoding and decoding when saving or loading from persistent storage.
+/// Each case maps to a user-friendly string value, suitable for display in UI elements.
+///
+/// You can use `Category` to tag transactions, filter data, or group items for insights.
+///
+/// Example usage:
+/// ```swift
+/// let category: Category = .food
+/// print(category.rawValue) // Output: "Food & Groceries"
+/// ```
+///
+/// You can also get all categories for selection:
+/// ```swift
+/// let allCategories = Category.allCases
+/// ```
 enum Category: String, CaseIterable, Codable {
     
-    /// Represents food-related expenses such as groceries, dining out, takeout, or cafes.
-    case food = "Food"
+    /// Expenses related to rent, mortgage, utilities, or property maintenance.
+    case housing = "Household"
     
-    /// Represents expenses related to entertainment and leisure,
-    /// including movies, subscriptions (e.g., Netflix), games, events, or hobbies.
+    /// Spending on groceries, restaurants, cafes, and other food-related purchases.
+    case food = "Food & Groceries"
+    
+    /// Costs associated with leisure activities like movies, vacations,
+    /// subscriptions (e.g., Netflix), events, or hobbies.
     case entertainment = "Entertainment"
     
-    /// Represents travel-related expenses including transportation,
-    /// flights, fuel, public transit, hotel stays, or road trips.
+    /// Expenses for transportation, trips, commuting.
     case travel = "Travel"
     
-    /// Represents shopping expenses for clothing, accessories,
-    /// electronics, gifts, or non-essential purchases.
+    /// Purchases of goods like clothes, electronics, or personal items.
     case shopping = "Shopping"
     
-    /// Represents health-related expenses such as medications,
-    /// doctor visits, fitness memberships, health insurance, or therapy.
-    case health = "Health"
+    /// Costs associated with medical care, insurance, pharmacy, and wellness, gym memberships.
+    case health = "Health & Medical"
     
-    /// A fallback category for any expense that doesn't fit into the predefined categories.
-    /// Useful for miscellaneous or one-off purchases.
+    /// Personal care, grooming, self-improvement, and miscellaneous personal spending.
+    case personal = "Personal"
+    
+    /// Expenses related to family, children, dependents, or shared household needs.
+    case family = "Family"
+    
+    /// Tuition fees, books, courses, training, and all educational expenses.
+    case education = "Education"
+    
+    /// Banking, interest, debt payments, loan EMIs, or insurance.
+    case finance = "Finance"
+    
+    /// Money allocated or spent on stocks, mutual funds, crypto, or other assets.
+    case investment = "Investment"
+    
+    /// Recurring expenses like Spotify, iCloud, or Google Drive.
+    case subscription = "Subscription"
+    
+    /// Any transaction that doesn't fit into the predefined categories.
     case other = "Other"
+    
+    var description: String {
+        switch self {
+        case .housing:
+            return "Covers all expenses related to your place of residence, such as rent, mortgage payments, utility bills (electricity, gas, water), home maintenance, and property taxes."
+            
+        case .food:
+            return "Includes everyday spending on food and groceries—whether shopping at supermarkets, dining at restaurants, ordering takeout, or visiting cafes and bakeries."
+            
+        case .entertainment:
+            return "Captures leisure and fun-related expenses like movie tickets, streaming subscriptions (e.g., Netflix), concerts, books, games, hobbies, and events."
+            
+        case .travel:
+            return "Used for transportation and travel costs such as flights, hotels, train tickets, fuel, ride-sharing services (like Uber), tolls, or vacations."
+            
+        case .shopping:
+            return "Includes non-essential consumer purchases like clothes, electronics, gadgets, cosmetics, accessories, home décor, or gifts."
+            
+        case .health:
+            return "Accounts for health and medical-related spending including doctor visits, medications, insurance premiums, therapy, dental care, and fitness memberships."
+            
+        case .personal:
+            return "Refers to self-care and personal development expenses like spa visits, grooming, subscriptions to learning platforms, and journaling apps."
+            
+        case .family:
+            return "Captures shared family expenses like household groceries, childcare, elder care, school fees, or family outings and gifts."
+            
+        case .education:
+            return "Used for any learning-related costs such as tuition fees, online courses, certifications, books, study materials, or skill development tools."
+            
+        case .investment:
+            return "Tracks capital invested into assets like stocks, mutual funds, real estate, cryptocurrency, or contributions to retirement or savings accounts."
+        
+        case .finance:
+            return "Represents financial obligations or services that are typically not directly tied to consumption but are essential for managing or maintaining one’s financial health. This category is useful for tracking money movement related to banking, loans, interest, or financial services."
+            
+        case .subscription:
+            return "Recurring expenses like app or software subscriptions (e.g., iCloud, Spotify), magazine memberships, news platforms, or productivity tools."
+            
+        case .other:
+            return "A general-purpose category for any expense that doesn’t fit into the above types. Ideal for tracking uncategorized or unique transactions."
+        }
+    }
+}
+
+extension Category {
+    var iconName: String {
+        switch self {
+        case .housing: return "house.fill"
+        case .food: return "takeoutbag.and.cup.and.straw.fill"
+        case .entertainment: return "film.fill"
+        case .travel: return "airplane"
+        case .shopping: return "bag.fill"
+        case .health: return "cross.case.fill"
+        case .personal: return "person.fill"
+        case .family: return "person.2.fill"
+        case .education: return "book.fill"
+        case .investment: return "chart.bar.xaxis"
+        case .finance: return "creditcard.fill"
+        case .subscription: return "repeat"
+        case .other: return "ellipsis"
+        }
+    }
 }
 
 /// An enumeration representing various filter options available for organizing or narrowing down transactions

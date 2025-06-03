@@ -18,10 +18,12 @@ struct IncomeItemView: View {
     /// The body property defines the layout and visual components of the `IncomeItemView`.
     var body: some View {
         HStack {
-            Image(systemName: "arrow.down.left")
-                .foregroundStyle(.green1)
+            Image(systemName: income.source.iconName)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 24, height: 24)
                 .padding(.trailing, 10)
-            
+                        
             VStack(alignment: .leading) {
                 // Displays the name of the income in a headline font.
                 Text(income.source.rawValue)
@@ -46,6 +48,10 @@ struct IncomeItemView: View {
             // The currency symbol is based on the user's locale.
             Text("\(income.amount, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))")
                 .font(.headline)
+            
+            Image(systemName: "arrow.down.left")
+                .foregroundStyle(.green1)
+                .padding(.leading, 10)
         }
     }
 }

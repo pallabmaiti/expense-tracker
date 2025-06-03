@@ -18,8 +18,10 @@ struct ExpenseItemView: View {
     /// The body property defines the layout and visual components of the `ExpenseItemView`.
     var body: some View {
         HStack {
-            Image(systemName: "arrow.up.right")
-                .foregroundStyle(.red1)
+            Image(systemName: expense.category.iconName)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 24, height: 24)
                 .padding(.trailing, 10)
             
             VStack(alignment: .leading) {
@@ -46,6 +48,10 @@ struct ExpenseItemView: View {
             // The currency symbol is based on the user's locale.
             Text("\(expense.amount, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))")
                 .font(.headline)
+            
+            Image(systemName: "arrow.up.right")
+                .foregroundStyle(.red1)
+                .padding(.leading, 10)
         }
     }
 }
