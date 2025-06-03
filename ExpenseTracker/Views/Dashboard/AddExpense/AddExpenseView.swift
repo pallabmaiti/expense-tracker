@@ -69,6 +69,14 @@ struct AddExpenseView: View {
                         }
                     }
                     .labelsHidden()
+                    
+                    Button {
+                        viewModel.showInfo.toggle()
+                    } label: {
+                        Image(systemName: "info.circle")
+                            .foregroundStyle(.green1)
+                    }
+                    .buttonStyle(.plain)
                 }
                 
                 // Date picker: Allows the user to select the date for the expense.
@@ -95,6 +103,11 @@ struct AddExpenseView: View {
                 Button("OK") { }
             } message: {
                 Text(viewModel.errorMessage)
+            }
+            .alert(viewModel.category.rawValue, isPresented: $viewModel.showInfo) {
+                Button("OK") { }
+            } message: {
+                Text(viewModel.category.description)
             }
         }
     }

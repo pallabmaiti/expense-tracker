@@ -42,6 +42,20 @@ struct InsightsChartItem: Identifiable {
             self.color = .orange
         case .other:
             self.color = .purple
+        case .housing:
+            self.color = .pink.opacity(0.5)
+        case .personal:
+            self.color = .brown
+        case .family:
+            self.color = .teal
+        case .education:
+            self.color = .indigo
+        case .investment:
+            self.color = .gray
+        case .subscription:
+            self.color = .black
+        case .finance:
+            self.color = .mint
         }
     }
     

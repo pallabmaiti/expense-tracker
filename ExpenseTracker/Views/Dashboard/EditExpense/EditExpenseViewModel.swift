@@ -14,10 +14,13 @@ extension EditExpenseView {
     @Observable
     class ViewModel {
         // MARK: - Public Properties
-
+        
         /// Boolean flags for displaying error and delete confirmation alerts.
         var showError: Bool = false
         var showDeleteConfirmation: Bool = false
+        
+        /// Boolean flags for displaying description of expense category.
+        var showInfo: Bool = false
         
         /// State properties for storing the edited expense values.
         var amount: Double
@@ -28,15 +31,15 @@ extension EditExpenseView {
         
         /// Error message to display in case of an error.
         var errorMessage: String = ""
-
+        
         // MARK: - Private Properties
-
+        
         /// The database manager responsible for performing data operations.
         private let databaseManager: DatabaseManager
         
         /// The expense to be edited.
         private let expense: Expense
-
+        
         /// Initializes the `ViewModel` with a database manager.
         /// - Parameters:
         ///   - expense: The `Expense` to be edited.
@@ -52,7 +55,7 @@ extension EditExpenseView {
         }
         
         // MARK: - Public Methods
-
+        
         /// Updates an existing expense in the database.
         /// - Returns: A `Bool` indicating success (`true`) or failure (`false`).
         func updateExpense() async -> Bool {

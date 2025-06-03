@@ -70,6 +70,14 @@ struct EditExpenseView: View {
                         }
                     }
                     .labelsHidden()
+                    
+                    Button {
+                        viewModel.showInfo.toggle()
+                    } label: {
+                        Image(systemName: "info.circle")
+                            .foregroundStyle(.green1)
+                    }
+                    .buttonStyle(.plain)
                 }
                 
                 // Date picker
@@ -115,6 +123,11 @@ struct EditExpenseView: View {
                 Button("Delete", role: .destructive, action: deleteExpense)
             } message: {
                 Text("Are you sure you want to delete this expense?")
+            }
+            .alert(viewModel.category.rawValue, isPresented: $viewModel.showInfo) {
+                Button("OK") { }
+            } message: {
+                Text(viewModel.category.description)
             }
         }
     }
