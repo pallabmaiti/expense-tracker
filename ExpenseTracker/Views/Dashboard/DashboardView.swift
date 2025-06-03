@@ -28,11 +28,6 @@ struct DashboardView: View {
         totalIncome - totalExpense
     }
     
-    /// The formatted string representing the current month and year.
-    var currentMonth: String {
-        Date().formattedString(dateFormat: "MMMM yyyy")
-    }
-    
     /// The `databaseManager` object that handles the interaction with the data storage.
     let databaseManager: DatabaseManager
     
@@ -47,9 +42,31 @@ struct DashboardView: View {
             Form {
                 /// Displays incomes, expense and the total balance.
                 Section {
-                    Text(currentMonth)
-                        .font(.title2.bold())
-                        .padding(.vertical, 5)
+                    HStack {
+                        Text(viewModel.monthYears[viewModel.selectedMonthYear])
+                            .font(.title2.bold())
+                            .padding(.vertical, 5)
+                        Spacer()
+                        
+                        Menu {
+                            ForEach(viewModel.monthYears.indices, id: \.self) { index in
+                                Button {
+                                    viewModel.selectedMonthYear = index
+                                    Task {
+                                        await viewModel.fetchExpenses()
+                                        await viewModel.fetchIncomes()
+                                    }
+                                } label: {
+                                    Text(viewModel.monthYears[index])
+                                    if viewModel.selectedMonthYear == index {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
+                            }
+                        } label: {
+                            Image(systemName: "chevron.up.chevron.down")
+                        }
+                    }
                     VStack {
                         HStack(spacing: 5) {
                             Text("Income")
@@ -179,6 +196,7 @@ struct DashboardView: View {
                 Task {
                     await viewModel.fetchExpenses()
                     await viewModel.fetchIncomes()
+                    await viewModel.prepareMonthYearSelection()
                 }
             }
             .alert("Delete", isPresented: $viewModel.showExpenseDeleteConfirmation, presenting: viewModel.expenseToDelete) { expense in
@@ -220,4 +238,7 @@ struct DashboardView: View {
 #Preview {
     DashboardView(databaseManager: .initWithInMemory)
         .environmentObject(TabManager())
+        .environment(DatabaseManager.initWithInMemory)
+        .environment(\.authenticator, FirebaseAuthenticator())
+        .environment(NotificationManager(center: .init(), settings: NotificationSettingsHandler()))
 }

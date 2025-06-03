@@ -23,6 +23,21 @@ extension Date {
         formatter.dateFormat = dateFormat
         return formatter.string(from: self)
     }
+    
+    /// Returns a new `Date` by adding a specified value to a calendar component of the current date.
+    ///
+    /// This method uses the current calendar (`Calendar.current`) to compute the new date.
+    /// It's useful for adding or subtracting date components like days, months, or years.
+    ///
+    /// - Parameters:
+    ///   - component: The `Calendar.Component` (e.g., `.day`, `.month`, `.year`) to modify.
+    ///   - value: The amount to add (positive or negative).
+    /// - Returns: A new `Date` object adjusted by the specified amount.
+    ///
+    /// - Note: This method force unwraps the result and will crash if `Calendar` fails to compute the new date.
+    func byAdding(_ component: Calendar.Component, value: Int) -> Date {
+        return Calendar.current.date(byAdding: component, value: value, to: self)!
+    }
 }
 
 

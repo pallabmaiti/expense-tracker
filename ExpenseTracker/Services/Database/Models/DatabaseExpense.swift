@@ -58,28 +58,28 @@ struct DatabaseExpense: Codable {
 
 extension DatabaseExpense {
     static var sample1: DatabaseExpense {
-        .init(name: "Groceries", amount: 2100.50, date: "2025-04-01", category: "Food", note: "1 litre")
+        .init(name: "Groceries", amount: 2100.50, date: Date().formattedString(), category: "Food", note: "")
     }
     static var sample2: DatabaseExpense {
-        .init(name: "Movie", amount: 1000.50, date: "2025-04-05", category: "Entertainment", note: "1 loaf")
+        .init(name: "Movie", amount: 1000.50, date: Date().byAdding(.day, value: 4).formattedString(), category: "Entertainment", note: "The Dark Knight Rises")
     }
     static var sample3: DatabaseExpense {
-        .init(name: "Cab", amount: 500.00, date: "2025-04-06", category: "Travel", note: "Dozen")
+        .init(name: "Cab", amount: 500.00, date: Date().byAdding(.day, value: 5).formattedString(), category: "Travel", note: "To office")
     }
     static var sample4: DatabaseExpense {
-        .init(name: "Coffee", amount: 12.50, date: "2025-03-31", category: "Drink", note: "1 cup")
+        .init(name: "Coffee", amount: 12.50, date: Date().byAdding(.day, value: 9).formattedString(), category: "Food", note: "1 cup")
     }
     
-    static var sample5: DatabaseExpense {
-        .init(name: "Chocolate", amount: 15.50, date: "2025-04-01", category: "Food", note: "1 bar")
+    static var sample1_1: DatabaseExpense {
+        .init(name: "Groceries", amount: 2000.50, date: Date().byAdding(.month, value: -1).formattedString(), category: "Food", note: "")
     }
-    static var sample6: DatabaseExpense {
-        .init(name: "Tea", amount: 8.50, date: "2025-04-02", category: "Food", note: "1 cup")
+    static var sample2_1: DatabaseExpense {
+        .init(name: "Movie", amount: 1000.50, date: Date().byAdding(.month, value: -1).byAdding(.day, value: 4).formattedString(), category: "Entertainment", note: "The Dark Knight")
     }
-    static var sample7: DatabaseExpense {
-        .init(name: "Soap", amount: 4.50, date: "2024-12-28", category: "Personal Care", note: "1 bar")
+    static var sample3_1: DatabaseExpense {
+        .init(name: "Cab", amount: 1500.00, date: Date().byAdding(.month, value: -1).byAdding(.day, value: 5).formattedString(), category: "Travel", note: "To outstation")
     }
-    static var sample8: DatabaseExpense {
-        .init(name: "Shampoo", amount: 7.50, date: "2024-12-29", category: "Personal Care", note: "1 bottle")
+    static var sample4_1: DatabaseExpense {
+        .init(name: "Coffee", amount: 50, date: Date().byAdding(.month, value: -1).byAdding(.day, value: 9).formattedString(), category: "Food", note: "4 cups")
     }
 }

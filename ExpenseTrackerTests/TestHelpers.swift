@@ -30,9 +30,10 @@ func newTestDatabaseIncome(
     id: String = UUID().uuidString,
     amount: Double = 10000.0,
     date: Date = Date(),
-    source: ExpenseTracker.Source = .salary
+    source: ExpenseTracker.Source = .salary,
+    note: String = ""
 ) -> DatabaseIncome {
-    .init(id: id, amount: amount, date: date.formattedString(), source: source.rawValue)
+    .init(id: id, amount: amount, date: date.formattedString(), source: source.rawValue, note: note)
 }
 
 func newTestDatabaseUser(
@@ -59,9 +60,10 @@ func newTestIncome(
     id: String = UUID().uuidString,
     amount: Double = 10000.0,
     date: Date = Date(),
-    source: ExpenseTracker.Source = .salary
+    source: ExpenseTracker.Source = .salary,
+    note: String = ""
 ) -> Income {
-    .init(id: id, amount: amount, source: source, date: date)
+    .init(id: id, amount: amount, source: source, date: date, note: note)
 }
 
 func updatedTestExpense(
@@ -79,9 +81,10 @@ func updatedTestIncome(
     id: String,
     amount: Double = 10000.0,
     date: Date = Date(),
-    source: ExpenseTracker.Source = .other
+    source: ExpenseTracker.Source = .other,
+    note: String = "Updated Test Note"
 ) -> Income {
-    .init(id: id, amount: amount, source: source, date: date)
+    .init(id: id, amount: amount, source: source, date: date, note: note)
 }
 
 func newTestUser(
@@ -100,10 +103,4 @@ func updatedTestUser(
     lastName: String? = "Test User"
 ) -> User {
     .init(id: id, email: email, firstName: firstName, lastName: lastName)
-}
-
-extension Date {
-    func byAdding(_ component: Foundation.Calendar.Component, value: Int) -> Date {
-        return Foundation.Calendar.current.date(byAdding: component, value: value, to: self)!
-    }
 }

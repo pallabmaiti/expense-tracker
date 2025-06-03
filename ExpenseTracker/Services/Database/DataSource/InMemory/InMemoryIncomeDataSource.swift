@@ -15,7 +15,7 @@ final class InMemoryIncomeDataSource: IncomeDataSource {
     
     /// Internal storage for all in-memory income records.
     /// Initialized with sample data to simulate pre-existing income entries.
-    private var _incomes: [DatabaseIncome] = [.sample1, .sample2, .sample3]
+    private var _incomes: [DatabaseIncome] = [.sample1_1, .sample2_1, .sample3_1, .sample1, .sample2, .sample3]
         
     /// Adds a new income entry to the in-memory list.
     /// - Parameter item: The `DatabaseIncome` object to be stored.

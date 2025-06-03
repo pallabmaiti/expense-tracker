@@ -42,12 +42,22 @@ struct DatabaseIncome: Codable {
 
 extension DatabaseIncome {
     static var sample1: DatabaseIncome {
-        .init(amount: 10000.0, date: "2025-04-01", source: Source.salary.rawValue, note: "")
+        .init(amount: 10000.0, date: Date().formattedString(), source: Source.salary.rawValue, note: "")
     }
     static var sample2: DatabaseIncome {
-        .init(amount: 5000.0, date: "2025-04-15", source: Source.rental.rawValue, note: "")
+        .init(amount: 5000.0, date: Date().byAdding(.day, value: 14).formattedString(), source: Source.rental.rawValue, note: "")
     }
     static var sample3: DatabaseIncome {
-        .init(amount: 2000.0, date: "2025-04-20", source: Source.other.rawValue, note: "Freelancer work")
+        .init(amount: 2000.0, date: Date().byAdding(.day, value: 19).formattedString(), source: Source.other.rawValue, note: "Freelancer work")
+    }
+    
+    static var sample1_1: DatabaseIncome {
+        .init(amount: 10000.0, date: Date().byAdding(.month, value: -1).formattedString(), source: Source.salary.rawValue, note: "")
+    }
+    static var sample2_1: DatabaseIncome {
+        .init(amount: 5000.0, date: Date().byAdding(.month, value: -1).byAdding(.day, value: 14).formattedString(), source: Source.rental.rawValue, note: "")
+    }
+    static var sample3_1: DatabaseIncome {
+        .init(amount: 4000.0, date: Date().byAdding(.month, value: -1).byAdding(.day, value: 19).formattedString(), source: Source.other.rawValue, note: "Freelancer work")
     }
 }

@@ -15,7 +15,7 @@ final class InMemoryExpenseDataSource: ExpenseDataSource {
     
     /// An internal array that stores expense items in memory.
     /// Preloaded with some sample data for testing or preview purposes.
-    private var _expenses: [DatabaseExpense] = [.sample1, .sample2, .sample3]
+    private var _expenses: [DatabaseExpense] = [.sample1_1, .sample2_1, .sample3_1, .sample4_1, .sample1, .sample2, .sample3, .sample4]
     
     /// Adds a new `DatabaseExpense` to the in-memory list.
     /// - Parameter item: The expense to be added.
