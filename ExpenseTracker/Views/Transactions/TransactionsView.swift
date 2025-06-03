@@ -254,4 +254,7 @@ struct TransactionsView: View {
 
 #Preview {
     TransactionsView(databaseManager: .initWithInMemory)
+        .environment(DatabaseManager.initWithInMemory)
+        .environment(\.authenticator, FirebaseAuthenticator())
+        .environment(NotificationManager(center: .init(), settings: NotificationSettingsHandler()))
 }

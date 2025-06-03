@@ -53,27 +53,6 @@ struct ContentView: View {
                 }
                 .tag(2)
         }
-        // Automatically switch database type based on user state
-        /*.onChange(of: userProvider.user) { _, newValue in
-            if let user = newValue {
-                // User signed in – start syncing to Firebase
-                isLoading = true
-                UserDefaults.standard.databaseType = .firebase(user.id)
-                UserDefaults.standard.isSignedIn = true
-                databaseManager.initializeRemoteDatabaseHandler(DatabaseHandler(database: FirebaseDatabase(userId: user.id)))
-                Task.detached {
-                    await databaseManager.syncLocalWithRemote()
-                    await databaseManager.syncRemoteWithLocal()
-                }
-                isLoading = false
-            } else {
-                // User signed out – stop syncing to Firebase
-                UserDefaults.standard.databaseType = .local
-                UserDefaults.standard.isSignedIn = false
-                databaseManager.deinitializeRemoteDatabaseHandler()
-            }
-        }
-        .progressHUD(isShowing: $isLoading, title: .constant("Syncing..."))*/
     }
 }
 

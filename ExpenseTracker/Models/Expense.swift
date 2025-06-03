@@ -116,15 +116,16 @@ extension [Expense] {
     
     /// Filters the array of `Expense` objects to only include those that belong to the current month and year.
     ///
+    /// - Parameter month: A custom date format string (default is "MMMM yyyy"). Represent the expenses belogs to the month.
+    ///
     /// - Returns: A new array of `Expense` objects from the current calendar month.
     ///
     /// - Note: Uses the "MMMM yyyy" format to compare month and year (e.g., "April 2025").
-    func filterByCurrentMonth() -> [Expense] {
-        let currentMonth = Date().formattedString(dateFormat: "MMMM yyyy")
+    func filterByMonth(_ month: String) -> [Expense] {
         return self.filter {
             $0.formattedDate
                 .formattedString(dateFormat: "MMMM yyyy")
-                .localizedCaseInsensitiveContains(currentMonth)
+                .localizedCaseInsensitiveContains(month)
         }
     }
 }

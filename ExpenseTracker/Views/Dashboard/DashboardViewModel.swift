@@ -11,19 +11,27 @@ extension DashboardView {
     @Observable
     class ViewModel {
         // MARK: - Public Properties
-
+        
         /// The list of expenses.
         private(set) var expenseList: [Expense] = []
         
         /// The list of incomes.
         private(set) var incomeList: [Income] = []
-                        
+        
+        /// An array holding month-year strings used for display or selection (e.g., "May 2025").
+        /// Initialized with the current month and year.
+        var monthYears: [String] = [Date().formattedString(dateFormat: "MMMM yyyy")]
+
+        /// Tracks the index of the currently selected month-year from the `monthYears` array.
+        /// Defaults to `0`, meaning the first (and currently only) item is selected.
+        var selectedMonthYear: Int = 0
+
         /// The current sorting option applied to the expenses.
         var sortingOption: SortingOption = .date
         
         /// The current ordering applied to sort the expenses.
         var isDescending: Bool = true
-                
+        
         /// A variable to control the visibility of the Add Expense sheet.
         var showAddExpense: Bool = false
         
@@ -55,7 +63,7 @@ extension DashboardView {
         var errorMessage: String = ""
         
         // MARK: - Private Properties
-
+        
         /// The database manager that handles the database operations.
         private let databaseManager: DatabaseManager
         
@@ -65,12 +73,12 @@ extension DashboardView {
         }
         
         // MARK: - Public Methods
-
+        
         /// Fetches the expenses from the database.
         func fetchExpenses() async {
             do {
                 let expenses = try await databaseManager.fetchExpenses()
-                let filteredExpenses = expenses.filterByCurrentMonth()
+                let filteredExpenses = expenses.filterByMonth(monthYears[selectedMonthYear])
                 expenseList = filteredExpenses.sorted(by: .date, isDescending: true)
             } catch {
                 showError = true
@@ -82,11 +90,26 @@ extension DashboardView {
         func fetchIncomes() async {
             do {
                 let incomes = try await databaseManager.fetchIncomes()
-                let filteredIncomes = incomes.filterByCurrentMonth()
+                let filteredIncomes = incomes.filterByMonth(monthYears[selectedMonthYear])
                 incomeList = filteredIncomes.sorted(by: .date, isDescending: true)
             } catch {
                 showError = true
                 errorMessage = error.localizedDescription
+            }
+        }
+        
+        func prepareMonthYearSelection() async {
+            do {
+                let expenses = try await databaseManager.fetchExpenses()
+                let monthYearSet = Set(expenses.map({ $0.formattedDate.formattedString(dateFormat: "MMMM yyyy") }))
+                                
+                monthYears = monthYearSet.sorted { dateA, dateB in
+                    return dateA.toDate(dateFormat: "MMMM yyyy") < dateB.toDate(dateFormat: "MMMM yyyy")
+                }
+                                
+                selectedMonthYear = monthYears.count - 1
+            } catch {
+                print("Error preparing month year selection: \(error.localizedDescription)")
             }
         }
         

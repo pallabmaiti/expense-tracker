@@ -206,4 +206,7 @@ struct InsightsView: View {
 
 #Preview {
     InsightsView(databaseManager: .initWithInMemory)
+        .environment(DatabaseManager.initWithInMemory)
+        .environment(\.authenticator, FirebaseAuthenticator())
+        .environment(NotificationManager(center: .init(), settings: NotificationSettingsHandler()))
 }

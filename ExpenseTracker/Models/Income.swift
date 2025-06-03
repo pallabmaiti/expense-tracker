@@ -106,15 +106,16 @@ extension [Income] {
     
     /// Filters the income entries to include only those that were received in the current month and year.
     ///
+    /// - Parameter month: A custom date format string (default is "MMMM yyyy"). Represent the incomes belogs to the month.
+    ///
     /// - Returns: An array of `Income` objects that belong to the current calendar month.
     ///
     /// - Note: The date is formatted as "MMMM yyyy" (e.g., "April 2025") to ensure a match based on both month and year.
-    func filterByCurrentMonth() -> [Income] {
-        let currentMonth = Date().formattedString(dateFormat: "MMMM yyyy")
+    func filterByMonth(_ month: String) -> [Income] {
         return self.filter {
             $0.formattedDate
                 .formattedString(dateFormat: "MMMM yyyy")
-                .localizedCaseInsensitiveContains(currentMonth)
+                .localizedCaseInsensitiveContains(month)
         }
     }
 }
