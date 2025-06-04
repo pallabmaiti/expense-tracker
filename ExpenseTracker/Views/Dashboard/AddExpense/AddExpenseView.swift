@@ -65,7 +65,7 @@ struct AddExpenseView: View {
                     Spacer()
                     Picker("Category", selection: $viewModel.category) {
                         ForEach(Category.allCases, id: \.self) { category in
-                            Text(category.rawValue)
+                            Text(category.displayName)
                         }
                     }
                     .labelsHidden()
@@ -104,7 +104,7 @@ struct AddExpenseView: View {
             } message: {
                 Text(viewModel.errorMessage)
             }
-            .alert(viewModel.category.rawValue, isPresented: $viewModel.showInfo) {
+            .alert(viewModel.category.displayName, isPresented: $viewModel.showInfo) {
                 Button("OK") { }
             } message: {
                 Text(viewModel.category.description)

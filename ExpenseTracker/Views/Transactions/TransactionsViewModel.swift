@@ -12,101 +12,115 @@ extension TransactionsView {
     /// Responsible for managing transaction data, filtering logic, user interactions, and error states.
     @Observable
     class ViewModel {
-
+        
         // MARK: - Filter State
-
+        
         /// Stores the active filter options selected by the user (e.g., date, category, source, amount).
         var selectedFilterOptions: Set<FilterOption> = []
-
+        
         /// The end date selected for filtering transactions.
         var endDate: Date = Date()
-
+        
         /// The start date selected for filtering transactions.
         var startDate: Date = Date()
-
+        
         /// Categories selected for filtering expense transactions.
         var selectedCategories: [Category] = []
-
+        
         /// Sources selected for filtering income transactions.
         var selectedSources: [Source] = []
-
+        
+        var selectedTransactions = Set<String>()
+        
         /// Boolean to toggle the display of expense category filter UI.
         var showExpenseCategoryFilter: Bool = false
-
+        
         /// Boolean to toggle the display of income source filter UI.
         var showIncomeSourceFilter: Bool = false
-
+        
         /// Boolean to toggle the display of date range filter UI.
         var showDateFilter: Bool = false
-
+        
         /// Boolean to toggle the display of amount range filter UI.
         var showAmountFilter: Bool = false
-
+        
         /// Amount ranges selected for filtering transactions.
         var selectedAmountRanges: [AmountRange] = []
-
+        
         // MARK: - Transaction State
-
+        
         /// All transactions (both incomes and expenses) fetched from the database.
-        private var allTransactions: [any Transaction] = []
-
+        private var transactionList: [Transaction] = []
+        
         /// Grouped and filtered transactions based on user-selected filters.
-        var transactions: [(key: String, value: [any Transaction])] {
+        var groupedTransactionList: [String: [Transaction]] {
             filterTransactions()
         }
-
+        /// Computed property for section header
+        var sectionKeys: [String] {
+            groupedTransactionList.keys.sorted { (key1, key2) -> Bool in
+                let date1 = key1.toDate(dateFormat: "MMMM yyyy")
+                let date2 = key2.toDate(dateFormat: "MMMM yyyy")
+                return date1 > date2
+            }
+        }
+        
+        var selection = Set<String>()
+        
+        var isEditing: Bool = false
+        
         // MARK: - Error Handling
-
+        
         /// Indicates if an error alert should be shown.
         var showError: Bool = false
-
+        
         /// Stores a user-readable error message.
         var errorMessage: String = ""
-
+        
         // MARK: - Search
-
+        
         /// Search text entered by the user to filter transactions.
         var searchText: String = ""
-
+        
         // MARK: - Delete & Edit Handling
-
+        
         /// Whether the confirmation alert for deleting an expense should be shown.
         var showExpenseDeleteConfirmation: Bool = false
-
+        
         /// Whether the confirmation alert for deleting an income should be shown.
         var showIncomeDeleteConfirmation: Bool = false
-
+        
         /// Expense selected for deletion.
         var expenseToDelete: Expense?
-
+        
         /// Expense selected for editing.
         var expenseToUpdate: Expense?
-
+        
         /// Income selected for deletion.
         var incomeToDelete: Income?
-
+        
         /// Income selected for editing.
         var incomeToUpdate: Income?
-
+        
         // MARK: - Database
-
+        
         /// Interface to interact with the database for querying and persisting transactions.
         let databaseManager: DatabaseManager
-
+        
         /// Initializes the ViewModel with a given database manager.
         /// - Parameter databaseManager: The database interface for transactions.
         init(databaseManager: DatabaseManager) {
             self.databaseManager = databaseManager
         }
-
+        
         // MARK: - Fetching Data
-
+        
         /// Fetches all incomes from the database and appends them to the transaction list.
         func fetchIncomes() async {
             do {
                 let incomes = try await databaseManager.fetchIncomes()
-                allTransactions.append(contentsOf: incomes)
-                allTransactions = allTransactions.sorted { $0.formattedDate > $1.formattedDate }
+                transactionList.append(contentsOf: incomes)
+                transactionList = transactionList.sorted { $0.formattedDate > $1.formattedDate }
             } catch {
                 showError = true
                 errorMessage = error.localizedDescription
@@ -118,8 +132,8 @@ extension TransactionsView {
         func fetchExpenses() async {
             do {
                 let expenses = try await databaseManager.fetchExpenses()
-                allTransactions.append(contentsOf: expenses)
-                allTransactions = allTransactions.sorted { $0.formattedDate > $1.formattedDate }
+                transactionList.append(contentsOf: expenses)
+                transactionList = transactionList.sorted { $0.formattedDate > $1.formattedDate }
             } catch {
                 showError = true
                 errorMessage = error.localizedDescription
@@ -128,7 +142,7 @@ extension TransactionsView {
         
         /// Clears all transactions currently held in memory.
         func clearAllTransactions() {
-            allTransactions.removeAll()
+            transactionList.removeAll()
         }
         
         // MARK: - Deletion
@@ -163,19 +177,19 @@ extension TransactionsView {
         }
         
         // MARK: - Filtering
-
+        
         /// Filters the list of transactions based on selected options (date, category, source, amount, search).
         /// - Returns: Grouped and sorted transactions matching all active filters.
-        private func filterTransactions() -> [(key: String, value: [any Transaction])] {
-            var filteredTransactions = allTransactions
-
+        private func filterTransactions() -> [String: [Transaction]] {
+            var filteredTransactions = transactionList
+            
             // Filter by selected date range
             if selectedFilterOptions.contains(.date) {
                 filteredTransactions = filteredTransactions.filter { transaction in
                     transaction.formattedDate >= startDate && transaction.formattedDate <= endDate
                 }
             }
-
+            
             // Filter by selected expense categories
             if selectedFilterOptions.contains(.category) {
                 filteredTransactions = filteredTransactions.filter { transaction in
@@ -185,7 +199,7 @@ extension TransactionsView {
                     return true
                 }
             }
-
+            
             // Filter by selected income sources
             if selectedFilterOptions.contains(.source) {
                 filteredTransactions = filteredTransactions.filter { transaction in
@@ -195,14 +209,14 @@ extension TransactionsView {
                     return true
                 }
             }
-
+            
             // Filter by selected amount range(s)
             if selectedFilterOptions.contains(.amount) {
                 filteredTransactions = filteredTransactions.filter { transaction in
                     selectedAmountRanges.contains { $0.range.contains(abs(transaction.amount)) }
                 }
             }
-
+            
             // Filter by search text (case-insensitive)
             if !searchText.isEmpty {
                 filteredTransactions = filteredTransactions.filter { transaction in
@@ -210,40 +224,17 @@ extension TransactionsView {
                         return income.source.rawValue.localizedCaseInsensitiveContains(searchText)
                     } else if let expense = transaction as? Expense {
                         return expense.name.localizedCaseInsensitiveContains(searchText)
-                            || expense.note.localizedCaseInsensitiveContains(searchText)
+                        || expense.note.localizedCaseInsensitiveContains(searchText)
                     }
                     return false
                 }
             }
-
+            
             // Group filtered transactions by month-year and sort descending
-            let grouped = groupTransactionsByMonthYear(filteredTransactions)
-            return grouped.sorted {
-                guard let d1 = monthYearFormatter.date(from: $0.key),
-                      let d2 = monthYearFormatter.date(from: $1.key) else { return false }
-                return d1 > d2
+            return Dictionary(grouping: filteredTransactions) { transaction in
+                transaction.formattedDate.formattedString(dateFormat: "MMMM yyyy")
             }
         }
-        
-        // MARK: - Grouping
-
-        /// Groups an array of transactions by the month and year of their date.
-        /// - Parameter transactions: The list of transactions to group.
-        /// - Returns: A dictionary where the key is a "MMMM yyyy" string and the value is the list of transactions.
-        private func groupTransactionsByMonthYear(_ transactions: [any Transaction]) -> [String: [any Transaction]] {
-            Dictionary(grouping: transactions) { transaction in
-                monthYearFormatter.string(from: transaction.formattedDate)
-            }
-        }
-
-        // MARK: - Helpers
-
-        /// Formatter used to convert dates to "MMMM yyyy" format.
-        private let monthYearFormatter: DateFormatter = {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "MMMM yyyy"
-            return formatter
-        }()
     }
 }
 

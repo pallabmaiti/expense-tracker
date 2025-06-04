@@ -102,7 +102,9 @@ extension DashboardView {
             do {
                 let expenses = try await databaseManager.fetchExpenses()
                 let monthYearSet = Set(expenses.map({ $0.formattedDate.formattedString(dateFormat: "MMMM yyyy") }))
-                                
+                
+                guard monthYearSet.isNotEmpty else { return }
+                
                 monthYears = monthYearSet.sorted { dateA, dateB in
                     return dateA.toDate(dateFormat: "MMMM yyyy") < dateB.toDate(dateFormat: "MMMM yyyy")
                 }
