@@ -127,35 +127,35 @@ struct TransactionsView: View {
                 /// List displaying grouped transactions by month and year.
                 List {
                     ForEach(viewModel.sectionKeys, id: \.self) { key in
-                        let transactions = viewModel.groupedTransactionList[key]!
-                        
-                        // Section header
-                        TransactionListSectionHeaderView(title: key, transactions: transactions)
-                            .listRowInsets(EdgeInsets())
-                            .listRowSeparator(.hidden)
-                        
-                        /// Display each transaction, with swipe actions for editing and deleting.
-                        ForEach(transactions, id: \.id) { transaction in
-                            TransactionItemView(transaction: transaction)
-                                .swipeActions {
-                                    Button("Delete", systemImage: "trash") {
-                                        if let expense = transaction as? Expense {
-                                            viewModel.alertType = .deleteExpense(expense)
-                                        } else if let income = transaction as? Income {
-                                            viewModel.alertType = .deleteIncome(income)
+                        if let transactions = viewModel.groupedTransactionList[key] {
+                            // Section header
+                            TransactionListSectionHeaderView(title: key, transactions: transactions)
+                                .listRowInsets(EdgeInsets())
+                                .listRowSeparator(.hidden)
+                            
+                            /// Display each transaction, with swipe actions for editing and deleting.
+                            ForEach(transactions, id: \.id) { transaction in
+                                TransactionItemView(transaction: transaction)
+                                    .swipeActions {
+                                        Button("Delete", systemImage: "trash") {
+                                            if let expense = transaction as? Expense {
+                                                viewModel.alertType = .deleteExpense(expense)
+                                            } else if let income = transaction as? Income {
+                                                viewModel.alertType = .deleteIncome(income)
+                                            }
                                         }
-                                    }
-                                    .tint(.red1)
-                                    
-                                    Button("Edit", systemImage: "pencil") {
-                                        if let expense = transaction as? Expense {
-                                            viewModel.presentedSheet = .editExpense(viewModel.databaseManager, expense)
-                                        } else if let income = transaction as? Income {
-                                            viewModel.presentedSheet = .editIncome(viewModel.databaseManager, income)
+                                        .tint(.red1)
+                                        
+                                        Button("Edit", systemImage: "pencil") {
+                                            if let expense = transaction as? Expense {
+                                                viewModel.presentedSheet = .editExpense(viewModel.databaseManager, expense)
+                                            } else if let income = transaction as? Income {
+                                                viewModel.presentedSheet = .editIncome(viewModel.databaseManager, income)
+                                            }
                                         }
+                                        .tint(.green1)
                                     }
-                                    .tint(.green1)
-                                }
+                            }
                         }
                     }
                 }
