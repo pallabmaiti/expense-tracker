@@ -22,7 +22,7 @@ struct MultipleSelectionView<T: Hashable>: View {
     
     /// Stores the currently selected items.
     @State private var selectedItems: Set<MultipleSelectionItem<T>> = []
-
+    
     /// The list of available items to display.
     let items: [MultipleSelectionItem<T>]
     
@@ -31,7 +31,7 @@ struct MultipleSelectionView<T: Hashable>: View {
     
     /// Closure called when the user finishes selection, returning selected items of type `T`.
     let onSelection: ([T]) -> Void
-
+    
     /// Initializes the multiple selection view.
     /// - Parameters:
     ///   - items: The list of items to choose from.
@@ -42,7 +42,7 @@ struct MultipleSelectionView<T: Hashable>: View {
         self.title = title
         self.onSelection = onSelection
     }
-
+    
     var body: some View {
         VStack(alignment: .leading) {
             HStack {
@@ -66,6 +66,7 @@ struct MultipleSelectionView<T: Hashable>: View {
                     toggleSelection(of: item)
                 }
                 .tint(Color.primary)
+                .listRowInsets(EdgeInsets())
                 .listRowSeparator(.hidden)
             }
             .listStyle(.plain)
@@ -94,7 +95,7 @@ struct MultipleSelectionView<T: Hashable>: View {
         }
         .padding(.top, 20)
     }
-
+    
     /// Toggles the selection state of an item.
     /// - Parameter item: The item to toggle in the selection set.
     private func toggleSelection(of item: MultipleSelectionItem<T>) {
@@ -116,18 +117,18 @@ struct MultipleSelectionRow: View {
     
     /// Action to perform when the row is tapped.
     let action: () -> Void
-
+    
     var body: some View {
         Button(action: action) {
             HStack {
+                Image(systemName: isSelected ? "checkmark.square.fill" : "square")
+                    .foregroundColor(isSelected ? .green1 : .gray)
+                    .padding(.trailing, 5)
                 Text(title)
                 Spacer()
-                    Image(systemName: isSelected ? "checkmark.square.fill" : "square")
-                    .foregroundColor(isSelected ? .green1 : .gray)
             }
-            .padding(20)
+            .padding(15)
             .background(isSelected ? Color.gray.opacity(0.2) : Color.clear)
-            .listRowInsets(EdgeInsets())
         }
     }
 }
