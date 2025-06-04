@@ -15,9 +15,15 @@ import Foundation
 /// ```swift
 /// let expense = Expense(id: UUID().uuidString, name: "Lunch", amount: 250.0, date: Date(), category: .food, note: "Had lunch at a restaurant")
 /// ```
-class Expense: Transaction {
+struct Expense: Transaction {
+    /// A unique identifier for the expense.
+    let id: String
     /// The name or description of the expense.
     let name: String
+    /// The amount spent on the expense.
+    let amount: Double
+    /// The stored date in string format.
+    let date: String
     
     /// The stored expense category as a string.
     private let _category: String
@@ -25,6 +31,9 @@ class Expense: Transaction {
     var category: Category {
         Category(rawValue: _category) ?? .other
     }
+    
+    /// Any additional notes or remarks about the expense.
+    let note: String
     
     enum CodingKeys: String, CodingKey {
         case id
@@ -45,23 +54,12 @@ class Expense: Transaction {
     ///   - category: The category of the expense.
     ///   - note: Additional notes about the expense.
     init(id: String, name: String, amount: Double, date: Date, category: Category, note: String) {
+        self.id = id
         self.name = name
+        self.amount = amount
+        self.date = date.formattedString()
         self._category = category.rawValue
-        super.init(id: id, amount: amount, date: date.formattedString(), note: note)
-    }
-    
-    required init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.name = try container.decode(String.self, forKey: .name)
-        self._category = try container.decode(String.self, forKey: ._category)
-        try super.init(from: decoder)
-    }
-    
-    override func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(_category, forKey: ._category)
-        try container.encode(name, forKey: .name)
-        try super.encode(to: encoder)
+        self.note = note
     }
 }
 

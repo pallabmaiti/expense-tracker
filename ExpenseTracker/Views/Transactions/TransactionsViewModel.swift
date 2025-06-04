@@ -50,10 +50,10 @@ extension TransactionsView {
         // MARK: - Transaction State
         
         /// All transactions (both incomes and expenses) fetched from the database.
-        private var transactionList: [Transaction] = []
+        var transactionList: [any Transaction] = []
         
         /// Grouped and filtered transactions based on user-selected filters.
-        var groupedTransactionList: [String: [Transaction]] {
+        var groupedTransactionList: [String: [any Transaction]] {
             filterTransactions()
         }
         /// Computed property for section header
@@ -68,39 +68,20 @@ extension TransactionsView {
         var selection = Set<String>()
         
         var isEditing: Bool = false
-        
-        // MARK: - Error Handling
-        
-        /// Indicates if an error alert should be shown.
-        var showError: Bool = false
-        
-        /// Stores a user-readable error message.
-        var errorMessage: String = ""
-        
+                
         // MARK: - Search
         
         /// Search text entered by the user to filter transactions.
         var searchText: String = ""
         
-        // MARK: - Delete & Edit Handling
-        
-        /// Whether the confirmation alert for deleting an expense should be shown.
-        var showExpenseDeleteConfirmation: Bool = false
-        
-        /// Whether the confirmation alert for deleting an income should be shown.
-        var showIncomeDeleteConfirmation: Bool = false
-        
-        /// Expense selected for deletion.
-        var expenseToDelete: Expense?
-        
-        /// Expense selected for editing.
-        var expenseToUpdate: Expense?
-        
-        /// Income selected for deletion.
-        var incomeToDelete: Income?
-        
-        /// Income selected for editing.
-        var incomeToUpdate: Income?
+        // MARK: - Delete, Edit & Error Handling
+
+        /// A variable to control the visibility of the Add/Edit Expense and Income sheet.
+        var presentedSheet: PresentedSheet? = nil
+
+        /// A variable to control the visibility of the delete confirmation alert for
+        /// an expense or income as well as error message.
+        var alertType: AlertType? = nil
         
         // MARK: - Database
         
@@ -122,8 +103,7 @@ extension TransactionsView {
                 transactionList.append(contentsOf: incomes)
                 transactionList = transactionList.sorted { $0.formattedDate > $1.formattedDate }
             } catch {
-                showError = true
-                errorMessage = error.localizedDescription
+                alertType = .error(message: error.localizedDescription)
             }
             
         }
@@ -135,8 +115,7 @@ extension TransactionsView {
                 transactionList.append(contentsOf: expenses)
                 transactionList = transactionList.sorted { $0.formattedDate > $1.formattedDate }
             } catch {
-                showError = true
-                errorMessage = error.localizedDescription
+                alertType = .error(message: error.localizedDescription)
             }
         }
         
@@ -156,8 +135,7 @@ extension TransactionsView {
                 await fetchExpenses()
                 await fetchIncomes()
             } catch {
-                showError.toggle()
-                errorMessage = error.localizedDescription
+                alertType = .error(message: error.localizedDescription)
             }
             
         }
@@ -171,8 +149,7 @@ extension TransactionsView {
                 await fetchExpenses()
                 await fetchIncomes()
             } catch {
-                showError.toggle()
-                errorMessage = error.localizedDescription
+                alertType = .error(message: error.localizedDescription)
             }
         }
         
@@ -180,7 +157,7 @@ extension TransactionsView {
         
         /// Filters the list of transactions based on selected options (date, category, source, amount, search).
         /// - Returns: Grouped and sorted transactions matching all active filters.
-        private func filterTransactions() -> [String: [Transaction]] {
+        private func filterTransactions() -> [String: [any Transaction]] {
             var filteredTransactions = transactionList
             
             // Filter by selected date range

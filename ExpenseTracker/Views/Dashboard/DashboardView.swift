@@ -13,28 +13,9 @@ struct DashboardView: View {
     /// The `ViewModel` instance that handles the data and business logic for the view.
     @State private var viewModel: ViewModel
     
-    /// The total amount of income recorded.
-    var totalIncome: Double {
-        viewModel.incomeList.reduce(0) { $0 + $1.amount }
-    }
-    
-    /// The total amount of expenses recorded.
-    var totalExpense: Double {
-        viewModel.expenseList.reduce(0) { $0 + $1.amount }
-    }
-    
-    /// The net balance available after expenses.
-    var balance: Double {
-        totalIncome - totalExpense
-    }
-    
-    /// The `databaseManager` object that handles the interaction with the data storage.
-    let databaseManager: DatabaseManager
-    
     /// Initializes the `DashboardView` with a given database manager.
     init(databaseManager: DatabaseManager) {
-        self.databaseManager = databaseManager
-        self.viewModel = .init(databaseManager: databaseManager)
+        _viewModel = .init(initialValue: .init(databaseManager: databaseManager))
     }
     
     var body: some View {
@@ -72,7 +53,7 @@ struct DashboardView: View {
                             Text("Income")
                                 .font(.headline)
                             Spacer()
-                            Text("\(totalIncome, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))")
+                            Text("\(viewModel.totalIncome, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))")
                                 .font(.subheadline)
                         }
                         .padding(.bottom, 5)
@@ -80,7 +61,7 @@ struct DashboardView: View {
                             Text("Expense")
                                 .font(.headline)
                             Spacer()
-                            Text("\(totalExpense, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))")
+                            Text("\(viewModel.totalExpense, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))")
                                 .font(.subheadline)
                                 .foregroundStyle(.red1)
                         }
@@ -90,9 +71,9 @@ struct DashboardView: View {
                         Text("Total Balance")
                             .font(.title2)
                         Spacer()
-                        Text("\(balance, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))")
+                        Text("\(viewModel.balance, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))")
                             .font(.subheadline)
-                            .foregroundStyle(balance >= 0 ? .green1 : .red1)
+                            .foregroundStyle(viewModel.balance >= 0 ? .green1 : .red1)
                     }
                     .padding(.vertical, 5)
                 }
@@ -104,20 +85,25 @@ struct DashboardView: View {
                         expenseList: viewModel.expenseList,
                         onSeeAll: {
                             tabManager.selectedTabIndex = 1
-                        }, onSortingOrderChanged: { isDescending in
+                        },
+                        onSortingOrderChanged: { isDescending in
                             viewModel.isDescending = isDescending
                             viewModel.sortExpenses()
-                        }, onSortingOptionChanged: { sortingOption in
+                        },
+                        onSortingOptionChanged: { sortingOption in
                             viewModel.sortingOption = sortingOption
                             viewModel.sortExpenses()
-                        }, onAddExpense: {
-                            viewModel.showAddExpense.toggle()
-                        }, onDeleteExpense: { expense in
-                            viewModel.expenseToDelete = expense
-                            viewModel.showExpenseDeleteConfirmation.toggle()
-                        }, onUpdateExpense: { expense in
-                            viewModel.expenseToUpdate = expense
-                        })
+                        },
+                        onAddExpense: {
+                            viewModel.presentedSheet = .addExpense(viewModel.databaseManager)
+                        },
+                        onDeleteExpense: { expense in
+                            viewModel.alertType = .deleteExpense(expense)
+                        },
+                        onUpdateExpense: { expense in
+                            viewModel.presentedSheet = .editExpense(viewModel.databaseManager, expense)
+                        }
+                    )
                 }
                 
                 /// Displays the list of recent incomes.
@@ -126,27 +112,30 @@ struct DashboardView: View {
                         incomeList: viewModel.incomeList,
                         onSeeAll: {
                             tabManager.selectedTabIndex = 1
-                        }, onAddIncome: {
-                            viewModel.showAddIncome.toggle()
-                        }, onDeleteIncome: { income in
-                            viewModel.incomeToDelete = income
-                            viewModel.showIncomeDeleteConfirmation.toggle()
-                        }, onUpdateIncome: { income in
-                            viewModel.incomeToUpdate = income
-                        })
+                        },
+                        onAddIncome: {
+                            viewModel.presentedSheet = .addIncome(viewModel.databaseManager)
+                        },
+                        onDeleteIncome: { income in
+                            viewModel.alertType = .deleteIncome(income)
+                        },
+                        onUpdateIncome: { income in
+                            viewModel.presentedSheet = .editIncome(viewModel.databaseManager, income)
+                        }
+                    )
                 }
             }
             .navigationTitle("Dashboard")
             .toolbar {
                 Menu("Add", systemImage: "plus") {
                     Button {
-                        viewModel.showAddIncome.toggle()
+                        viewModel.presentedSheet = .addIncome(viewModel.databaseManager)
                     } label: {
                         Text("Income")
                         Image(systemName: "arrow.down.left")
                     }
                     Button {
-                        viewModel.showAddExpense.toggle()
+                        viewModel.presentedSheet = .addExpense(viewModel.databaseManager)
                     } label: {
                         Text("Expense")
                         Image(systemName: "arrow.up.right")
@@ -159,39 +148,21 @@ struct DashboardView: View {
                     await viewModel.fetchIncomes()
                 }
             }
-            .sheet(isPresented: $viewModel.showAddExpense) {
-                AddExpenseView(databaseManager: databaseManager) {
-                    Task {
-                        await viewModel.fetchExpenses()
-                    }
+            .sheetPresenter(
+                presentedSheet: $viewModel.presentedSheet,
+                onExpenseAdd: {
+                    Task { await viewModel.fetchExpenses() }
+                },
+                onIncomeAdd: {
+                    Task { await viewModel.fetchIncomes() }
+                },
+                onExpenseUpdate: {
+                    Task { await viewModel.fetchExpenses() }
+                },
+                onIncomeUpdate: {
+                    Task { await viewModel.fetchIncomes() }
                 }
-            }
-            .sheet(isPresented: $viewModel.showAddIncome) {
-                AddIncomeView(databaseManager: databaseManager) {
-                    Task {
-                        await viewModel.fetchIncomes()
-                    }
-                }
-            }
-            .sheet(item: $viewModel.expenseToUpdate) { item in
-                EditExpenseView(expense: item, databaseManager: databaseManager) {
-                    Task {
-                        await viewModel.fetchExpenses()
-                    }
-                }
-            }
-            .sheet(item: $viewModel.incomeToUpdate) { item in
-                EditIncomeView(income: item, databaseManager: databaseManager) {
-                    Task {
-                        await viewModel.fetchIncomes()
-                    }
-                }
-            }
-            .alert("Error", isPresented: $viewModel.showError) {
-                Button("OK") { }
-            } message: {
-                Text(viewModel.errorMessage)
-            }
+            )
             .onAppear {
                 Task {
                     await viewModel.fetchExpenses()
@@ -199,38 +170,15 @@ struct DashboardView: View {
                     await viewModel.prepareMonthYearSelection()
                 }
             }
-            .alert("Delete", isPresented: $viewModel.showExpenseDeleteConfirmation, presenting: viewModel.expenseToDelete) { expense in
-                Button("Cancel", role: .cancel) { }
-                Button("Delete", role: .destructive) {
-                    deleteExpense(expense)
+            .alertPresenter(
+                alertType: $viewModel.alertType,
+                onDeleteExpense: { expense in
+                    Task { await viewModel.deleteExpense(expense) }
+                },
+                onDeleteIncome: { income in
+                    Task { await viewModel.deleteIncome(income) }
                 }
-            } message: { expense in
-                Text("Are you sure you want to delete \(expense.name)?")
-            }
-            .alert("Delete", isPresented: $viewModel.showIncomeDeleteConfirmation, presenting: viewModel.incomeToDelete) { income in
-                Button("Cancel", role: .cancel) { }
-                Button("Delete", role: .destructive) {
-                    deleteIncome(income)
-                }
-            } message: { income in
-                Text("Are you sure you want to delete \(income.source.rawValue)?")
-            }
-        }
-    }
-    
-    /// Deletes the selected expense from the database.
-    /// - Parameter expense: The `Expense` object to be deleted.
-    func deleteExpense(_ expense: Expense) {
-        Task {
-            await viewModel.deleteExpense(expense)
-        }
-    }
-    
-    /// Deletes the selected income from the database.
-    /// - Parameter income: The `Income` object to be deleted.
-    func deleteIncome(_ income: Income) {
-        Task {
-            await viewModel.deleteIncome(income)
+            )
         }
     }
 }

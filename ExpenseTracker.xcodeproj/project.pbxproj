@@ -35,6 +35,8 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
+				Resources/SampleSecrets.xcconfig,
+				Resources/Secrets.xcconfig,
 				Views/SignInOrSignUp/Common/VerifyOTP/VerifyOTPView.swift,
 				Views/SignInOrSignUp/Common/VerifyOTP/VerifyOTPViewModel.swift,
 			);
@@ -180,7 +182,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1630;
-				LastUpgradeCheck = 1630;
+				LastUpgradeCheck = 1640;
 				TargetAttributes = {
 					ED21E98D2D95286200DC60F1 = {
 						CreatedOnToolsVersion = 16.2;
