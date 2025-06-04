@@ -56,7 +56,9 @@ struct MultipleSelectionView<T: Hashable>: View {
             }
             .padding(20)
             
-            ForEach(items, id: \.self) { item in
+            Divider()
+            
+            List(items, id: \.self) { item in
                 MultipleSelectionRow(
                     title: item.title,
                     isSelected: selectedItems.contains(item)
@@ -64,7 +66,11 @@ struct MultipleSelectionView<T: Hashable>: View {
                     toggleSelection(of: item)
                 }
                 .tint(Color.primary)
+                .listRowSeparator(.hidden)
             }
+            .listStyle(.plain)
+            
+            Divider()
             
             HStack(spacing: 20) {
                 Spacer()

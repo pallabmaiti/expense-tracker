@@ -152,10 +152,10 @@ extension Source {
 enum Category: String, CaseIterable, Codable {
     
     /// Expenses related to rent, mortgage, utilities, or property maintenance.
-    case housing = "Household"
+    case household = "Household"
     
     /// Spending on groceries, restaurants, cafes, and other food-related purchases.
-    case food = "Food & Groceries"
+    case food = "Food"
     
     /// Costs associated with leisure activities like movies, vacations,
     /// subscriptions (e.g., Netflix), events, or hobbies.
@@ -168,7 +168,7 @@ enum Category: String, CaseIterable, Codable {
     case shopping = "Shopping"
     
     /// Costs associated with medical care, insurance, pharmacy, and wellness, gym memberships.
-    case health = "Health & Medical"
+    case health = "Health"
     
     /// Personal care, grooming, self-improvement, and miscellaneous personal spending.
     case personal = "Personal"
@@ -191,13 +191,44 @@ enum Category: String, CaseIterable, Codable {
     /// Any transaction that doesn't fit into the predefined categories.
     case other = "Other"
     
+    var displayName: String {
+        switch self {
+        case .household:
+            "Household"
+        case .food:
+            "Food and Groceries"
+        case .entertainment:
+            "Entertainment"
+        case .travel:
+            "Transportation"
+        case .shopping:
+            "Shopping"
+        case .health:
+            "Health & Medical"
+        case .personal:
+            "Personal"
+        case .family:
+            "Family"
+        case .education:
+            "Education"
+        case .finance:
+            "Finance"
+        case .investment:
+            "Investment"
+        case .subscription:
+            "Subscription"
+        case .other:
+            "Other"
+        }
+    }
+    
     var description: String {
         switch self {
-        case .housing:
+        case .household:
             return "Covers all expenses related to your place of residence, such as rent, mortgage payments, utility bills (electricity, gas, water), home maintenance, and property taxes."
             
         case .food:
-            return "Includes everyday spending on food and groceries—whether shopping at supermarkets, dining at restaurants, ordering takeout, or visiting cafes and bakeries."
+            return "Includes everyday spending on food and groceries; whether shopping at supermarkets, dining at restaurants, ordering takeout, or visiting cafes and bakeries."
             
         case .entertainment:
             return "Captures leisure and fun-related expenses like movie tickets, streaming subscriptions (e.g., Netflix), concerts, books, games, hobbies, and events."
@@ -238,7 +269,7 @@ enum Category: String, CaseIterable, Codable {
 extension Category {
     var iconName: String {
         switch self {
-        case .housing: return "house.fill"
+        case .household: return "house.fill"
         case .food: return "takeoutbag.and.cup.and.straw.fill"
         case .entertainment: return "film.fill"
         case .travel: return "airplane"
