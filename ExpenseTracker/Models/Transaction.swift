@@ -9,39 +9,23 @@ import Foundation
 
 /// A protocol that represents a financial transaction, such as an expense or income.
 /// Conforming types must have a unique identifier, an amount, and a date.
-class Transaction: Identifiable, Codable, Hashable {
-    
+protocol Transaction: Identifiable, Codable {
     /// A unique identifier for the transaction.
-    var id: String
+    var id: String { get }
     
     /// The monetary amount of the transaction.
-    var amount: Double
+    var amount: Double { get }
     
     /// The date of the transaction in string format.
     ///
     /// - Format: `"yyyy-MM-dd"` (Default format).
-    var date: String
+    var date: String { get }
     
     /// Any additional notes or remarks about the transaction.
-    var note: String
-    
-    init(id: String, amount: Double, date: String, note: String) {
-        self.id = id
-        self.amount = amount
-        self.date = date
-        self.note = note
-    }
-    
-    static func == (lhs: Transaction, rhs: Transaction) -> Bool {
-        lhs.id == rhs.id
-    }
-    
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-        hasher.combine(amount)
-        hasher.combine(date)
-        hasher.combine(note)
-    }
+    var note: String { get }
+
+    /// A computed property that converts the string-based date into a `Date` object.
+    var formattedDate: Date { get }
 }
 
 /// An extension that provides a default implementation for `formattedDate`.

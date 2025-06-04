@@ -18,6 +18,21 @@ extension DashboardView {
         /// The list of incomes.
         private(set) var incomeList: [Income] = []
         
+        /// The total amount of income recorded.
+        var totalIncome: Double {
+            incomeList.reduce(0) { $0 + $1.amount }
+        }
+        
+        /// The total amount of expenses recorded.
+        var totalExpense: Double {
+            expenseList.reduce(0) { $0 + $1.amount }
+        }
+        
+        /// The net balance available after expenses.
+        var balance: Double {
+            totalIncome - totalExpense
+        }
+        
         /// An array holding month-year strings used for display or selection (e.g., "May 2025").
         /// Initialized with the current month and year.
         var monthYears: [String] = [Date().formattedString(dateFormat: "MMMM yyyy")]
@@ -32,40 +47,17 @@ extension DashboardView {
         /// The current ordering applied to sort the expenses.
         var isDescending: Bool = true
         
-        /// A variable to control the visibility of the Add Expense sheet.
-        var showAddExpense: Bool = false
+        /// A variable to control the visibility of the Add/Edit Expense and Income sheet.
+        var presentedSheet: PresentedSheet? = nil
         
-        /// A variable to control the visibility of the Add Income sheet.
-        var showAddIncome: Bool = false
-        
-        /// A variable to control the visibility of the delete confirmation alert for an expense.
-        var showExpenseDeleteConfirmation: Bool = false
-        
-        /// A variable to control the visibility of the delete confirmation alert for an income.
-        var showIncomeDeleteConfirmation: Bool = false
-        
-        /// A variable to control the visibility of error messages.
-        var showError: Bool = false
-        
-        /// The expense that the user wants to delete.
-        var expenseToDelete: Expense?
-        
-        /// The expense that the user wants to update.
-        var expenseToUpdate: Expense?
-        
-        /// The income that the user wants to delete.
-        var incomeToDelete: Income?
-        
-        /// The income that the user wants to update.
-        var incomeToUpdate: Income?
-        
-        /// A variable that holds the error message to be displayed.
-        var errorMessage: String = ""
-        
+        /// A variable to control the visibility of the delete confirmation alert for
+        /// an expense or income as well as error message.
+        var alertType: AlertType? = nil
+                
         // MARK: - Private Properties
         
         /// The database manager that handles the database operations.
-        private let databaseManager: DatabaseManager
+        let databaseManager: DatabaseManager
         
         /// Initializes the ViewModel with a given database manager.
         init(databaseManager: DatabaseManager) {
@@ -81,8 +73,7 @@ extension DashboardView {
                 let filteredExpenses = expenses.filterByMonth(monthYears[selectedMonthYear])
                 expenseList = filteredExpenses.sorted(by: .date, isDescending: true)
             } catch {
-                showError = true
-                errorMessage = error.localizedDescription
+                alertType = .error(message: error.localizedDescription)
             }
         }
         
@@ -93,8 +84,7 @@ extension DashboardView {
                 let filteredIncomes = incomes.filterByMonth(monthYears[selectedMonthYear])
                 incomeList = filteredIncomes.sorted(by: .date, isDescending: true)
             } catch {
-                showError = true
-                errorMessage = error.localizedDescription
+                alertType = .error(message: error.localizedDescription)
             }
         }
         
@@ -123,8 +113,7 @@ extension DashboardView {
                 _ = try await databaseManager.deleteExpense(expense)
                 await fetchExpenses()
             } catch {
-                showError = true
-                errorMessage = error.localizedDescription
+                alertType = .error(message: error.localizedDescription)
             }
         }
         
@@ -136,8 +125,7 @@ extension DashboardView {
                 _ = try await databaseManager.deleteIncome(income)
                 await fetchIncomes()
             } catch {
-                showError = true
-                errorMessage = error.localizedDescription
+                alertType = .error(message: error.localizedDescription)
             }
         }
         

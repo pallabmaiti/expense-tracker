@@ -14,7 +14,12 @@ import Foundation
 ///
 /// - Conforms to `Identifiable` to allow unique identification within lists.
 /// - Conforms to `Codable` for easy encoding/decoding when storing or retrieving data.
-class Income: Transaction {
+struct Income: Transaction {
+    /// Unique identifier for the income entry.
+    let id: String
+    
+    /// The amount of income received.
+    let amount: Double
     
     /// The stored source type as a string.
     private let _source: String
@@ -23,6 +28,12 @@ class Income: Transaction {
     var source: Source {
         Source(rawValue: _source) ?? .other
     }
+    
+    /// The stored date in string format.
+    let date: String
+    
+    /// Any additional notes or remarks about the income.
+    let note: String
     
     enum CodingKeys: String, CodingKey {
         case id
@@ -40,20 +51,11 @@ class Income: Transaction {
     ///   - date: The date when the income was received.
     ///   - note: Additional notes about the income.
     init(id: String, amount: Double, source: Source, date: Date, note: String) {
+        self.id = id
+        self.amount = amount
         self._source = source.rawValue
-        super.init(id: id, amount: amount, date: date.formattedString(), note: note)
-    }
-    
-    required init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self._source = try container.decode(String.self, forKey: ._source)
-        try super.init(from: decoder)
-    }
-    
-    override func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(_source, forKey: ._source)
-        try super.encode(to: encoder)
+        self.date = date.formattedString()
+        self.note = note
     }
 }
 

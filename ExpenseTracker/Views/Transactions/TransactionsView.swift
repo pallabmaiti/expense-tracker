@@ -53,7 +53,7 @@ struct FilterView: View {
 struct TransactionListSectionHeaderView: View {
     @Environment(\.colorScheme) private var colorScheme
     let title: String
-    let transactions: [Transaction]
+    let transactions: [any Transaction]
     
     var body: some View {
         HStack {
@@ -81,7 +81,7 @@ struct TransactionListSectionHeaderView: View {
 /// A polymorphic view that displays either an expense or income item
 /// based on the type of the given transaction.
 struct TransactionItemView: View {
-    let transaction: Transaction
+    let transaction: any Transaction
     
     var body: some View {
         if let expense = transaction as? Expense {
@@ -102,13 +102,9 @@ struct TransactionsView: View {
     /// ViewModel that manages the state and logic for transactions.
     @State private var viewModel: ViewModel
     
-    /// The database manager to fetch and manipulate income and expense data.
-    let databaseManager: DatabaseManager
-    
     /// Initializes the TransactionsView with a provided database manager.
     init(databaseManager: DatabaseManager) {
-        self.databaseManager = databaseManager
-        self.viewModel = .init(databaseManager: databaseManager)
+        _viewModel = .init(initialValue: .init(databaseManager: databaseManager))
     }
     
     var body: some View {
@@ -118,18 +114,18 @@ struct TransactionsView: View {
                 FilterView(selectedFilterOptions: $viewModel.selectedFilterOptions) { filterOption in
                     switch filterOption {
                     case .date:
-                        viewModel.showDateFilter.toggle()
+                        viewModel.presentedSheet = .showDateFilter
                     case .source:
-                        viewModel.showIncomeSourceFilter.toggle()
+                        viewModel.presentedSheet = .showIncomeSource
                     case .category:
-                        viewModel.showExpenseCategoryFilter.toggle()
+                        viewModel.presentedSheet = .showExpenseCategory
                     case .amount:
-                        viewModel.showAmountFilter.toggle()
+                        viewModel.presentedSheet = .showAmountRange
                     }
                 }
                 
                 /// List displaying grouped transactions by month and year.
-                List(selection: $viewModel.selection) {
+                List {
                     ForEach(viewModel.sectionKeys, id: \.self) { key in
                         let transactions = viewModel.groupedTransactionList[key]!
                         
@@ -139,25 +135,23 @@ struct TransactionsView: View {
                             .listRowSeparator(.hidden)
                         
                         /// Display each transaction, with swipe actions for editing and deleting.
-                        ForEach(transactions) { transaction in
+                        ForEach(transactions, id: \.id) { transaction in
                             TransactionItemView(transaction: transaction)
                                 .swipeActions {
                                     Button("Delete", systemImage: "trash") {
                                         if let expense = transaction as? Expense {
-                                            viewModel.expenseToDelete = expense
-                                            viewModel.showExpenseDeleteConfirmation.toggle()
+                                            viewModel.alertType = .deleteExpense(expense)
                                         } else if let income = transaction as? Income {
-                                            viewModel.incomeToDelete = income
-                                            viewModel.showIncomeDeleteConfirmation.toggle()
+                                            viewModel.alertType = .deleteIncome(income)
                                         }
                                     }
                                     .tint(.red1)
                                     
                                     Button("Edit", systemImage: "pencil") {
                                         if let expense = transaction as? Expense {
-                                            viewModel.expenseToUpdate = expense
+                                            viewModel.presentedSheet = .editExpense(viewModel.databaseManager, expense)
                                         } else if let income = transaction as? Income {
-                                            viewModel.incomeToUpdate = income
+                                            viewModel.presentedSheet = .editIncome(viewModel.databaseManager, income)
                                         }
                                     }
                                     .tint(.green1)
@@ -166,9 +160,7 @@ struct TransactionsView: View {
                     }
                 }
                 .listStyle(.plain)
-                .environment(\.editMode, viewModel.isEditing ? .constant(.active) : .constant(.inactive))
             }
-            .padding(0)
             .searchable(text: $viewModel.searchText, prompt: "Search for a transaction")
             .navigationTitle("Transactions")
             .toolbarSyncButton() {
@@ -177,21 +169,6 @@ struct TransactionsView: View {
                     await viewModel.fetchIncomes()
                 }
             }
-            /*.toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    if viewModel.selection.isNotEmpty {
-                        Button("Edit", systemImage: "pencil") {
-                            viewModel.isEditing.toggle()
-                            print("Selected ids: \(viewModel.selection)")
-                        }
-                    } else {
-                        EditButton()
-                            .onTapGesture {
-                                viewModel.isEditing.toggle()
-                            }
-                    }
-                }
-            }*/
             .task {
                 /// On view load, clear existing data and fetch transactions from database.
                 Task {
@@ -200,98 +177,49 @@ struct TransactionsView: View {
                     await viewModel.fetchIncomes()
                 }
             }
-            
-            /// Sheet for filtering by expense category.
-            .sheet(isPresented: $viewModel.showExpenseCategoryFilter) {
-                MultipleSelectionView(items: Category.allCases.map{ MultipleSelectionItem(title: $0.rawValue, item: $0)}, title: "Expense Category") { selectedCategories in
+            .sheetPresenter(
+                presentedSheet: $viewModel.presentedSheet,
+                onExpenseUpdate: {
+                    Task {
+                        viewModel.clearAllTransactions()
+                        await viewModel.fetchExpenses()
+                        await viewModel.fetchIncomes()
+                    }
+                },
+                onIncomeUpdate: {
+                    Task {
+                        viewModel.clearAllTransactions()
+                        await viewModel.fetchExpenses()
+                        await viewModel.fetchIncomes()
+                    }
+                },
+                onExpenseCategorySelection: { selectedCategories in
                     viewModel.selectedCategories = selectedCategories
                     viewModel.selectedFilterOptions.insert(.category)
-                }
-                .presentationDetents([.fraction(0.75)])
-                .presentationDragIndicator(.visible)
-            }
-            
-            /// Sheet for filtering by income source.
-            .sheet(isPresented: $viewModel.showIncomeSourceFilter) {
-                MultipleSelectionView(items: Source.allCases.map{ MultipleSelectionItem(title: $0.rawValue, item: $0) }, title: "Income Source") { selectedSources in
+                },
+                onIncomeSourceSelection: { selectedSources in
                     viewModel.selectedSources = selectedSources
                     viewModel.selectedFilterOptions.insert(.source)
-                }
-                .presentationDetents([.fraction(0.75)])
-                .presentationDragIndicator(.visible)
-            }
-            
-            /// Sheet for filtering by amount range.
-            .sheet(isPresented: $viewModel.showAmountFilter) {
-                MultipleSelectionView(items: AmountRange.allCases.map{ MultipleSelectionItem(title: $0.title, item: $0) }, title: "Amount") { selectedAmountRanges in
+                },
+                onAmountRangeSelection: { selectedAmountRanges in
                     viewModel.selectedAmountRanges = selectedAmountRanges
                     viewModel.selectedFilterOptions.insert(.amount)
-                }
-                .presentationDetents([.fraction(0.75)])
-                .presentationDragIndicator(.visible)
-            }
-            
-            /// Sheet for editing an expense.
-            .sheet(item: $viewModel.expenseToUpdate) { item in
-                EditExpenseView(expense: item, databaseManager: databaseManager) {
-                    Task {
-                        viewModel.clearAllTransactions()
-                        await viewModel.fetchExpenses()
-                        await viewModel.fetchIncomes()
-                    }
-                }
-            }
-            
-            /// Sheet for editing an income.
-            .sheet(item: $viewModel.incomeToUpdate) { item in
-                EditIncomeView(income: item, databaseManager: databaseManager) {
-                    Task {
-                        viewModel.clearAllTransactions()
-                        await viewModel.fetchExpenses()
-                        await viewModel.fetchIncomes()
-                    }
-                }
-            }
-            
-            /// Sheet for selecting date range.
-            .sheet(isPresented: $viewModel.showDateFilter) {
-                DateFilterView() { startDate, endDate in
+                },
+                onDateFilterSelection: { startDate, endDate in
                     viewModel.startDate = startDate
                     viewModel.endDate = endDate
                     viewModel.selectedFilterOptions.insert(.date)
                 }
-            }
-            
-            /// Alert to show general error messages.
-            .alert("Error", isPresented: $viewModel.showError) {
-                Button("OK") { }
-            } message: {
-                Text(viewModel.errorMessage)
-            }
-            
-            /// Alert to confirm deletion of an expense.
-            .alert("Delete", isPresented: $viewModel.showExpenseDeleteConfirmation, presenting: viewModel.expenseToDelete) { expense in
-                Button("Cancel", role: .cancel) { }
-                Button("Delete", role: .destructive) {
-                    Task {
-                        await viewModel.deleteExpense(expense)
-                    }
+            )
+            .alertPresenter(
+                alertType: $viewModel.alertType,
+                onDeleteExpense: { expense in
+                    Task { await viewModel.deleteExpense(expense) }
+                },
+                onDeleteIncome: { income in
+                    Task { await viewModel.deleteIncome(income) }
                 }
-            } message: { expense in
-                Text("Are you sure you want to delete \(expense.name)?")
-            }
-            
-            /// Alert to confirm deletion of an income.
-            .alert("Delete", isPresented: $viewModel.showIncomeDeleteConfirmation, presenting: viewModel.incomeToDelete) { income in
-                Button("Cancel", role: .cancel) { }
-                Button("Delete", role: .destructive) {
-                    Task {
-                        await viewModel.deleteIncome(income)
-                    }
-                }
-            } message: { income in
-                Text("Are you sure you want to delete \(income.source.rawValue)?")
-            }
+            )
         }
     }
 }
