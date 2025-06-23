@@ -21,10 +21,15 @@ extension InsightsView {
         
         /// A list of aggregated chart items for current month's incomes.
         private(set) var incomeList: [InsightsChartItem] = []
-        
-        /// The currently selected month (formatted like "April 2025").
-        var currentMonth: String = Date().formattedString(dateFormat: "MMMM yyyy")
-        
+                
+        /// An array holding month-year strings used for display or selection (e.g., "May 2025").
+        /// Initialized with the current month and year.
+        var monthYears: [String] = [Date().formattedString(dateFormat: "MMMM yyyy")]
+
+        /// Tracks the index of the currently selected month-year from the `monthYears` array.
+        /// Defaults to `0`, meaning the first (and currently only) item is selected.
+        var selectedMonthYear: Int = 0
+
         /// Determines whether an error alert should be shown.
         var showError: Bool = false
         
@@ -36,11 +41,9 @@ extension InsightsView {
         
         /// Controls the presentation of the Add Income sheet.
         var showAddIncome: Bool = false
-        
-        // MARK: - Private Properties
-        
+                
         /// The database manager responsible for fetching income and expense data.
-        private let databaseManager: DatabaseManager
+        let databaseManager: DatabaseManager
         
         // MARK: - Initialization
         
@@ -59,11 +62,7 @@ extension InsightsView {
                 let incomes = try await databaseManager.fetchIncomes()
                 incomeList = [] // Reset list before adding fresh items
                 
-                let filteredIncomes = incomes.filter {
-                    $0.formattedDate
-                        .formattedString(dateFormat: "MMMM yyyy")
-                        .localizedCaseInsensitiveContains(self.currentMonth)
-                }
+                let filteredIncomes = incomes.filterByMonth(monthYears[selectedMonthYear])
                 
                 // Group and sum by source
                 Source.allCases.forEach { source in
@@ -86,11 +85,7 @@ extension InsightsView {
                 let expenses = try await databaseManager.fetchExpenses()
                 expenseList = [] // Reset list before adding fresh items
                 
-                let filteredExpenses = expenses.filter {
-                    $0.formattedDate
-                        .formattedString(dateFormat: "MMMM yyyy")
-                        .localizedCaseInsensitiveContains(self.currentMonth)
-                }
+                let filteredExpenses = expenses.filterByMonth(monthYears[selectedMonthYear])
                 
                 // Group and sum by category
                 Category.allCases.forEach { category in
@@ -103,6 +98,23 @@ extension InsightsView {
             } catch {
                 showError = true
                 errorMessage = error.localizedDescription
+            }
+        }
+        
+        func prepareMonthYearSelection() async {
+            do {
+                let expenses = try await databaseManager.fetchExpenses()
+                let monthYearSet = Set(expenses.map({ $0.formattedDate.formattedString(dateFormat: "MMMM yyyy") }))
+                
+                guard monthYearSet.isNotEmpty else { return }
+                
+                monthYears = monthYearSet.sorted { dateA, dateB in
+                    return dateA.toDate(dateFormat: "MMMM yyyy") < dateB.toDate(dateFormat: "MMMM yyyy")
+                }
+                                
+                selectedMonthYear = monthYears.count - 1
+            } catch {
+                print("Error preparing month year selection: \(error.localizedDescription)")
             }
         }
     }
