@@ -53,7 +53,7 @@ struct InsightsChartItem: Identifiable {
         case .investment:
             self.color = .gray
         case .subscription:
-            self.color = .black.opacity(0.5)
+            self.color = .gray.opacity(0.5)
         case .finance:
             self.color = .mint
         }
@@ -93,7 +93,7 @@ struct ChartView: View {
                 SectorMark(
                     angle: .value("Amount", item.amount),
                     innerRadius: .ratio(0.6), // Creates donut effect
-                    angularInset: 5
+                    angularInset: 1
                 )
                 .cornerRadius(5)
                 .foregroundStyle(item.color)
@@ -123,14 +123,10 @@ struct InsightsView: View {
     /// View model handling data operations and state.
     @State var viewModel: ViewModel
     
-    /// The data source for fetching and managing income/expense data.
-    let databaseManager: DatabaseManager
-
     /// Initializes the `InsightsView` with a given database manager.
     /// - Parameter databaseManager: Object conforming to `DatabaseManager` to handle data operations.
     init(databaseManager: DatabaseManager) {
-        self.databaseManager = databaseManager
-        self.viewModel = .init(databaseManager: databaseManager)
+        self._viewModel = .init(initialValue: .init(databaseManager: databaseManager))
     }
 
     var body: some View {
@@ -139,8 +135,32 @@ struct InsightsView: View {
                 VStack {
                     VStack(alignment: .leading) {
                         // Current month header
-                        Text(viewModel.currentMonth)
-                            .font(.title2)
+                        
+                        HStack {
+                            Text(viewModel.monthYears[viewModel.selectedMonthYear])
+                                .font(.title2.bold())
+                                .padding(.vertical, 5)
+                            Spacer()
+                            
+                            Menu {
+                                ForEach(viewModel.monthYears.indices, id: \.self) { index in
+                                    Button {
+                                        viewModel.selectedMonthYear = index
+                                        Task {
+                                            await viewModel.fetchExpenses()
+                                            await viewModel.fetchIncomes()
+                                        }
+                                    } label: {
+                                        Text(viewModel.monthYears[index])
+                                        if viewModel.selectedMonthYear == index {
+                                            Image(systemName: "checkmark")
+                                        }
+                                    }
+                                }
+                            } label: {
+                                Image(systemName: "chevron.up.chevron.down")
+                            }
+                        }
                         
                         Rectangle()
                             .frame(height: 1)
@@ -190,6 +210,7 @@ struct InsightsView: View {
                 Task {
                     await viewModel.fetchExpenses()
                     await viewModel.fetchIncomes()
+                    await viewModel.prepareMonthYearSelection()
                 }
             }
             .task {
@@ -197,17 +218,18 @@ struct InsightsView: View {
                     // Fetch data when view appears
                     await viewModel.fetchIncomes()
                     await viewModel.fetchExpenses()
+                    await viewModel.prepareMonthYearSelection()
                 }
             }
             .sheet(isPresented: $viewModel.showAddExpense) {
-                AddExpenseView(databaseManager: databaseManager) {
+                AddExpenseView(databaseManager: viewModel.databaseManager) {
                     Task {
                         await viewModel.fetchExpenses()
                     }
                 }
             }
             .sheet(isPresented: $viewModel.showAddIncome) {
-                AddIncomeView(databaseManager: databaseManager) {
+                AddIncomeView(databaseManager: viewModel.databaseManager) {
                     Task {
                         await viewModel.fetchIncomes()
                     }
