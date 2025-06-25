@@ -34,53 +34,23 @@ struct AddExpenseView: View {
     var body: some View {
         NavigationStack {
             Form {
-                // Name field: Allows the user to enter the name of the expense (e.g., "Lunch", "Dinner").
-                HStack {
-                    Text("Name")
-                    Spacer()
-                    TextField("Lunch, Dinner, etc.", text: $viewModel.name)
-                        .multilineTextAlignment(.trailing)
-                }
-                
-                // Note field: Allows the user to enter any additional notes regarding the expense.
-                HStack {
-                    Text("Note")
-                    Spacer()
-                    TextField("Note", text: $viewModel.note)
-                        .multilineTextAlignment(.trailing)
-                }
-                
-                // Amount field: Allows the user to enter the amount of the expense.
-                HStack {
-                    Text("Amount")
-                    Spacer()
-                    TextField("Amount", value: $viewModel.amount, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
-                        .keyboardType(.decimalPad)
-                        .multilineTextAlignment(.trailing)
-                }
-                
-                // Expense Type picker: Allows the user to select the category of the expense (e.g., Food, Transport, etc.).
-                HStack {
-                    Text("Category")
-                    Spacer()
-                    Picker("Category", selection: $viewModel.category) {
-                        ForEach(Category.allCases, id: \.self) { category in
-                            Text(category.displayName)
-                        }
+                ExpenseFormView(
+                    name: $viewModel.name,
+                    note: $viewModel.note,
+                    amount: $viewModel.amount,
+                    category: $viewModel.category,
+                    date: $viewModel.date,
+                    showInfo: {
+                        viewModel.alertType = .category(name: viewModel.category.displayName, description: viewModel.category.description)
                     }
-                    .labelsHidden()
-                    
-                    Button {
-                        viewModel.showInfo.toggle()
-                    } label: {
-                        Image(systemName: "info.circle")
-                            .foregroundStyle(.green1)
-                    }
-                    .buttonStyle(.plain)
-                }
+                )
                 
-                // Date picker: Allows the user to select the date for the expense.
-                DatePicker("Date", selection: $viewModel.date, displayedComponents: .date)
+                // Add another button
+                Section {
+                    FullWidthButton(title: "Add Another", action: addAnotherExpense)
+                    .disabled(viewModel.shouldDisabled)
+                    .tint(.green1)
+                }
             }
             .navigationTitle("Add Expense")
             .navigationBarTitleDisplayMode(.inline)
@@ -88,7 +58,7 @@ struct AddExpenseView: View {
                 // Save button: Initiates the process of adding the expense.
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Save", action: addExpense)
-                        .disabled(viewModel.name.isEmpty || viewModel.amount == 0)
+                        .disabled(viewModel.shouldDisabled)
                 }
                 
                 // Cancel button: Dismisses the view without saving the expense.
@@ -99,16 +69,9 @@ struct AddExpenseView: View {
                 }
             }
             // Error alert: Displays an error message if something goes wrong while saving the expense.
-            .alert("Error", isPresented: $viewModel.showError) {
-                Button("OK") { }
-            } message: {
-                Text(viewModel.errorMessage)
-            }
-            .alert(viewModel.category.displayName, isPresented: $viewModel.showInfo) {
-                Button("OK") { }
-            } message: {
-                Text(viewModel.category.description)
-            }
+            .alertPresenter(
+                alertType: $viewModel.alertType
+            )
         }
     }
     
@@ -122,6 +85,13 @@ struct AddExpenseView: View {
                 dismiss()
                 onSave()
             }
+        }
+    }
+    
+    func addAnotherExpense() {
+        Task {
+            _ = await viewModel.addExpense()
+            viewModel.addAnotherExpense()
         }
     }
 }

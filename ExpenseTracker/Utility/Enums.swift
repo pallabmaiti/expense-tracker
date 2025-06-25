@@ -81,6 +81,10 @@ enum Ordering {
     }
 }
 
+protocol Displayable {
+    var displayName: String { get }
+}
+
 /// An enumeration representing the different sources of income in the expense tracker application.
 ///
 /// Categorizing income sources helps users track where their money is coming from,
@@ -111,6 +115,10 @@ enum Source: String, CaseIterable, Codable {
     /// Any other type of income not classified above.
     /// Examples: gifts, lottery winnings, inheritance, or one-time gains.
     case other = "Other"
+}
+
+extension Source: Displayable {
+    var displayName: String { self.rawValue }
 }
 
 extension Source {
@@ -149,7 +157,7 @@ extension Source {
 /// ```swift
 /// let allCategories = Category.allCases
 /// ```
-enum Category: String, CaseIterable, Codable {
+enum Category: String, CaseIterable, Codable, Displayable {
     
     /// Expenses related to rent, mortgage, utilities, or property maintenance.
     case household = "Household"

@@ -11,12 +11,14 @@ enum AlertType: Identifiable {
     case error(message: String)
     case deleteExpense(Expense)
     case deleteIncome(Income)
+    case category(name: String, description: String)
     
     var id: String {
         switch self {
         case .error: return "error"
         case .deleteExpense: return "deleteExpense"
         case .deleteIncome: return "deleteIncome"
+        case .category: return "category"
         }
     }
 }
@@ -56,6 +58,14 @@ struct AlertPresenterModifier: ViewModifier {
                         },
                         secondaryButton: .cancel()
                     )
+                    
+                case let .category(name, description):
+                    return Alert(
+                        title: Text(name),
+                        message: Text(description),
+                        dismissButton: .default(Text("OK"))
+                    )
+                    
                 }
             }
     }

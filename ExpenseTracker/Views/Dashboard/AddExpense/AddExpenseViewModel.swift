@@ -16,15 +16,6 @@ extension AddExpenseView {
     class ViewModel {
         // MARK: - Public Properties
         
-        /// Boolean flags for displaying error and delete confirmation alerts.
-        var showError: Bool = false
-        
-        /// Error message to display in case of an error.
-        var errorMessage: String = ""
-        
-        /// Boolean flags for displaying description of expense category.
-        var showInfo: Bool = false
-        
         // State properties for handling user input.
         var amount: Double = 0
         var category: Category = .food
@@ -32,6 +23,14 @@ extension AddExpenseView {
         var name: String = ""
         var note: String = ""
         
+        var shouldDisabled: Bool {
+            name.isEmpty || amount == 0
+        }
+        
+        /// A variable to control the visibility of the delete confirmation alert for
+        /// an expense as well as error message and displaying description of expense category.
+        var alertType: AlertType? = nil
+
         // MARK: - Private Properties
         
         /// The database manager responsible for handling database operations.
@@ -64,10 +63,16 @@ extension AddExpenseView {
                     )
                 )
             } catch {
-                showError = true
-                errorMessage = error.localizedDescription
+                alertType = .error(message: error.localizedDescription)
                 return false
             }
+        }
+        
+        func addAnotherExpense() {
+            name = ""
+            amount = 0
+            note = ""
+            alertType = nil
         }
     }
 }
