@@ -23,59 +23,20 @@ struct DashboardView: View {
             Form {
                 /// Displays incomes, expense and the total balance.
                 Section {
-                    HStack {
-                        Text(viewModel.monthYears[viewModel.selectedMonthYear])
-                            .font(.title2.bold())
-                            .padding(.vertical, 5)
-                        Spacer()
-                        
-                        Menu {
-                            ForEach(viewModel.monthYears.indices, id: \.self) { index in
-                                Button {
-                                    viewModel.selectedMonthYear = index
-                                    Task {
-                                        await viewModel.fetchExpenses()
-                                        await viewModel.fetchIncomes()
-                                    }
-                                } label: {
-                                    Text(viewModel.monthYears[index])
-                                    if viewModel.selectedMonthYear == index {
-                                        Image(systemName: "checkmark")
-                                    }
-                                }
+                    DashboardHeaderView(
+                        monthYears: viewModel.monthYears,
+                        selectedMonthYear: viewModel.selectedMonthYear,
+                        totalIncome: viewModel.totalIncome,
+                        totalExpense: viewModel.totalExpense,
+                        balance: viewModel.balance,
+                        onSelectMonth: { index in
+                            Task {
+                                viewModel.selectedMonthYear = index
+                                await viewModel.fetchExpenses()
+                                await viewModel.fetchIncomes()
                             }
-                        } label: {
-                            Image(systemName: "chevron.up.chevron.down")
                         }
-                    }
-                    VStack {
-                        HStack(spacing: 5) {
-                            Text("Income")
-                                .font(.headline)
-                            Spacer()
-                            Text("\(viewModel.totalIncome, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))")
-                                .font(.subheadline)
-                        }
-                        .padding(.bottom, 5)
-                        HStack(spacing: 5) {
-                            Text("Expense")
-                                .font(.headline)
-                            Spacer()
-                            Text("\(viewModel.totalExpense, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))")
-                                .font(.subheadline)
-                                .foregroundStyle(.red1)
-                        }
-                    }
-                    .padding(.vertical, 5)
-                    HStack(spacing: 5) {
-                        Text("Total Balance")
-                            .font(.title2)
-                        Spacer()
-                        Text("\(viewModel.balance, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))")
-                            .font(.subheadline)
-                            .foregroundStyle(viewModel.balance >= 0 ? .green1 : .red1)
-                    }
-                    .padding(.vertical, 5)
+                    )
                 }
                 
                 /// Displays the list of recent expenses.
@@ -123,6 +84,16 @@ struct DashboardView: View {
                             viewModel.presentedSheet = .editIncome(viewModel.databaseManager, income)
                         }
                     )
+                }
+            }
+            .refreshable {
+                Task {
+                    viewModel.isLoading = true
+                    await viewModel.syncData()
+                    await viewModel.fetchExpenses()
+                    await viewModel.fetchIncomes()
+                    await viewModel.prepareMonthYearSelection()
+                    viewModel.isLoading = false
                 }
             }
             .navigationTitle("Dashboard")
@@ -179,6 +150,7 @@ struct DashboardView: View {
                     Task { await viewModel.deleteIncome(income) }
                 }
             )
+            .progressHUD(isShowing: $viewModel.isLoading, title: .constant("Syncing..."))
         }
     }
 }
