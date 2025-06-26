@@ -14,31 +14,25 @@ extension EditExpenseView {
     @Observable
     class ViewModel {
         // MARK: - Public Properties
-        
-        /// Boolean flags for displaying error and delete confirmation alerts.
-        var showError: Bool = false
-        var showDeleteConfirmation: Bool = false
-        
-        /// Boolean flags for displaying description of expense category.
-        var showInfo: Bool = false
-        
+                
         /// State properties for storing the edited expense values.
         var amount: Double
         var category: Category
         var date: Date
         var name: String
         var note: String
-        
-        /// Error message to display in case of an error.
-        var errorMessage: String = ""
-        
+                
+        /// A variable to control the visibility of the delete confirmation alert for
+        /// an expense as well as error message and displaying description of expense category.
+        var alertType: AlertType? = nil
+
+        /// The expense to be edited.
+        let expense: Expense
+
         // MARK: - Private Properties
         
         /// The database manager responsible for performing data operations.
         private let databaseManager: DatabaseManager
-        
-        /// The expense to be edited.
-        private let expense: Expense
         
         /// Initializes the `ViewModel` with a database manager.
         /// - Parameters:
@@ -71,8 +65,7 @@ extension EditExpenseView {
                     )
                 )
             } catch {
-                showError = true
-                errorMessage = error.localizedDescription
+                alertType = .error(message: error.localizedDescription)
                 return false
             }
         }
@@ -83,8 +76,7 @@ extension EditExpenseView {
             do {
                 return try await databaseManager.deleteExpense(expense)
             } catch {
-                showError = true
-                errorMessage = error.localizedDescription
+                alertType = .error(message: error.localizedDescription)
                 return false
             }
         }

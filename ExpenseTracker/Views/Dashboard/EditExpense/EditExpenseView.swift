@@ -35,66 +35,23 @@ struct EditExpenseView: View {
     var body: some View {
         NavigationStack {
             Form {
-                // Name field
-                HStack {
-                    Text("Name")
-                    Spacer()
-                    TextField("Lunch, Dinner, etc.", text: $viewModel.name)
-                        .multilineTextAlignment(.trailing)
-                }
-                
-                // Note field
-                HStack {
-                    Text("Note")
-                    Spacer()
-                    TextField("Note", text: $viewModel.note)
-                        .multilineTextAlignment(.trailing)
-                }
-                
-                // Amount field
-                HStack {
-                    Text("Amount")
-                    Spacer()
-                    TextField("Amount", value: $viewModel.amount, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
-                        .keyboardType(.decimalPad)
-                        .multilineTextAlignment(.trailing)
-                }
-                
-                // Expense category picker
-                HStack {
-                    Text("Category")
-                    Spacer()
-                    Picker("Category", selection: $viewModel.category) {
-                        ForEach(Category.allCases, id: \.self) { category in
-                            Text(category.displayName)
-                        }
+                ExpenseFormView(
+                    name: $viewModel.name,
+                    note: $viewModel.note,
+                    amount: $viewModel.amount,
+                    category: $viewModel.category,
+                    date: $viewModel.date,
+                    showInfo: {
+                        viewModel.alertType = .category(name: viewModel.category.displayName, description: viewModel.category.description)
                     }
-                    .labelsHidden()
-                    
-                    Button {
-                        viewModel.showInfo.toggle()
-                    } label: {
-                        Image(systemName: "info.circle")
-                            .foregroundStyle(.green1)
-                    }
-                    .buttonStyle(.plain)
-                }
-                
-                // Date picker
-                DatePicker("Date", selection: $viewModel.date, displayedComponents: .date)
+                )
                 
                 // Delete button
                 Section {
-                    Button {
-                        viewModel.showDeleteConfirmation.toggle()
-                    } label: {
-                        HStack(alignment: .center) {
-                            Text("Delete")
-                                .frame(maxWidth: .infinity)
-                                .foregroundStyle(.red)
-                                .multilineTextAlignment(.center)
-                        }
+                    FullWidthButton(title: "Delete") {
+                        viewModel.alertType = .deleteExpense(viewModel.expense)
                     }
+                    .tint(.red)
                 }
             }
             .navigationTitle("Edit Expense")
@@ -113,22 +70,12 @@ struct EditExpenseView: View {
                     }
                 }
             }
-            .alert("Error", isPresented: $viewModel.showError) {
-                Button("OK") { }
-            } message: {
-                Text(viewModel.errorMessage)
-            }
-            .alert("Delete", isPresented: $viewModel.showDeleteConfirmation) {
-                Button("Cancel", role: .cancel) { }
-                Button("Delete", role: .destructive, action: deleteExpense)
-            } message: {
-                Text("Are you sure you want to delete this expense?")
-            }
-            .alert(viewModel.category.displayName, isPresented: $viewModel.showInfo) {
-                Button("OK") { }
-            } message: {
-                Text(viewModel.category.description)
-            }
+            .alertPresenter(
+                alertType: $viewModel.alertType,
+                onDeleteExpense: { expense in
+                    Task { await viewModel.deleteExpense() }
+                }
+            )
         }
     }
     

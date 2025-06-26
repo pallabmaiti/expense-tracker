@@ -35,8 +35,6 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
-				Resources/SampleSecrets.xcconfig,
-				Resources/Secrets.xcconfig,
 				Views/SignInOrSignUp/Common/VerifyOTP/VerifyOTPView.swift,
 				Views/SignInOrSignUp/Common/VerifyOTP/VerifyOTPViewModel.swift,
 			);
