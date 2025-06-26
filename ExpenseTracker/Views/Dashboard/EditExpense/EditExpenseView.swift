@@ -73,7 +73,7 @@ struct EditExpenseView: View {
             .alertPresenter(
                 alertType: $viewModel.alertType,
                 onDeleteExpense: { expense in
-                    Task { await viewModel.deleteExpense() }
+                    deleteExpense()
                 }
             )
         }

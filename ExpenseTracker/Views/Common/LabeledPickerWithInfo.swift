@@ -40,14 +40,7 @@ struct LabeledPickerWithInfo<T: Hashable & CaseIterable & Displayable>: View whe
     
     var body: some View {
         HStack {
-            Text(label)
-            Spacer()
-            Picker(label, selection: $selection) {
-                ForEach(T.allCases, id: \.self) { item in
-                    Text(item.displayName)
-                }
-            }
-            .labelsHidden()
+            LabeledPicker(label: label, selection: $selection)
             
             if let showInfo = showInfo {
                 Button(action: showInfo) {

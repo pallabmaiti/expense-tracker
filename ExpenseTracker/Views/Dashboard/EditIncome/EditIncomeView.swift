@@ -35,51 +35,19 @@ struct EditIncomeView: View {
     var body: some View {
         NavigationStack {
             Form {
-                // Amount field
-                HStack {
-                    Text("Amount")
-                    Spacer()
-                    TextField("Amount", value: $viewModel.amount, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
-                        .keyboardType(.decimalPad)
-                        .multilineTextAlignment(.trailing)
-                }
-                
-                // Source picker
-                HStack {
-                    Text("Source")
-                    Spacer()
-                    Picker("Source", selection: $viewModel.source) {
-                        ForEach(Source.allCases, id: \.self) { source in
-                            Text(source.rawValue)
-                        }
-                    }
-                    .labelsHidden()
-                }
-                
-                if viewModel.source == .other {
-                    HStack {
-                        Text("Note")
-                        Spacer()
-                        TextField("Note", text: $viewModel.note)
-                            .multilineTextAlignment(.trailing)
-                    }
-                }
-                
-                // Date picker
-                DatePicker("Date", selection: $viewModel.date, displayedComponents: .date)
+                IncomeFormView(
+                    amount: $viewModel.amount,
+                    source: $viewModel.source,
+                    note: $viewModel.note,
+                    date: $viewModel.date
+                )
                 
                 // Delete button
                 Section {
-                    Button {
-                        viewModel.showDeleteConfirmation.toggle()
-                    } label: {
-                        HStack(alignment: .center) {
-                            Text("Delete")
-                                .frame(maxWidth: .infinity)
-                                .foregroundStyle(.red)
-                                .multilineTextAlignment(.center)
-                        }
+                    FullWidthButton(title: "Delete") {
+                        viewModel.alertType = .deleteIncome(viewModel.income)
                     }
+                    .tint(.red)
                 }
             }
             .navigationTitle("Edit Income")
@@ -98,17 +66,12 @@ struct EditIncomeView: View {
                     }
                 }
             }
-            .alert("Error", isPresented: $viewModel.showError) {
-                Button("OK") { }
-            } message: {
-                Text(viewModel.errorMessage)
-            }
-            .alert("Delete", isPresented: $viewModel.showDeleteConfirmation) {
-                Button("Cancel", role: .cancel) { }
-                Button("Delete", role: .destructive, action: deleteIncome)
-            } message: {
-                Text("Are you sure you want to delete this income?")
-            }
+            .alertPresenter(
+                alertType: $viewModel.alertType,
+                onDeleteIncome: { _ in
+                    deleteIncome()
+                }
+            )
         }
     }
     
