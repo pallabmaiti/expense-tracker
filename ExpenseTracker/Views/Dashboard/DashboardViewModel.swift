@@ -53,6 +53,8 @@ extension DashboardView {
         /// A variable to control the visibility of the delete confirmation alert for
         /// an expense or income as well as error message.
         var alertType: AlertType? = nil
+        
+        var isLoading: Bool = false
                 
         // MARK: - Private Properties
         
@@ -132,6 +134,10 @@ extension DashboardView {
         /// Sort incomes by `SortingOption`.
         func sortExpenses() {
             expenseList = expenseList.sorted(by: sortingOption, isDescending: isDescending)
+        }
+        
+        func syncData() async {
+            await databaseManager.syncLocalWithRemote()
         }
     }
 }
