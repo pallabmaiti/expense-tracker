@@ -25,38 +25,12 @@ struct AddIncomeView: View {
     var body: some View {
         NavigationStack {
             Form {
-                // Amount field: Allows the user to enter the amount of the income.
-                HStack {
-                    Text("Amount")
-                    Spacer()
-                    TextField("Amount", value: $viewModel.amount, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
-                        .keyboardType(.decimalPad)
-                        .multilineTextAlignment(.trailing)
-                }
-                
-                // Source picker: Allows the user to select the type of the income (e.g., Salary, Rental, etc.).
-                HStack {
-                    Text("Source")
-                    Spacer()
-                    Picker("Source", selection: $viewModel.source) {
-                        ForEach(Source.allCases, id: \.self) { source in
-                            Text(source.rawValue)
-                        }
-                    }
-                    .labelsHidden()
-                }
-                
-                if viewModel.source == .other {
-                    HStack {
-                        Text("Note")
-                        Spacer()
-                        TextField("Note", text: $viewModel.note)
-                            .multilineTextAlignment(.trailing)
-                    }
-                }
-                
-                // Date picker: Allows the user to select the date for the income.
-                DatePicker("Date", selection: $viewModel.date, displayedComponents: .date)
+                IncomeFormView(
+                    amount: $viewModel.amount,
+                    source: $viewModel.source,
+                    note: $viewModel.note,
+                    date: $viewModel.date
+                )
             }
             .navigationTitle("Add Income")
             .navigationBarTitleDisplayMode(.inline)

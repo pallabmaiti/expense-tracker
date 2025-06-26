@@ -14,24 +14,21 @@ extension EditIncomeView {
     @Observable
     class ViewModel {
         // MARK: - Public Properties
-
-        /// Boolean flags for displaying error and delete confirmation alerts.
-        var showError: Bool = false
-        var showDeleteConfirmation: Bool = false
         
         /// State properties for storing the edited income values.
         var amount: Double
         var source: Source
         var date: Date
         var note: String
-        
-        /// Error message to display in case of an error.
-        var errorMessage: String = ""
-        
-        // MARK: - Private Properties
+                
+        /// A variable to control the visibility of the delete confirmation alert for
+        /// an expense as well as error message and displaying description of expense category.
+        var alertType: AlertType? = nil
 
         /// The income to be edited.
-        private let income: Income
+        let income: Income
+
+        // MARK: - Private Properties
 
         /// The database manager responsible for performing data operations.
         private let databaseManager: DatabaseManager
@@ -58,8 +55,7 @@ extension EditIncomeView {
                 let updatedNote = source == .other ? note : ""
                 return try await databaseManager.updateIncome(.init(id: income.id, amount: amount, source: source, date: date, note: updatedNote))
             } catch {
-                showError = true
-                errorMessage = error.localizedDescription
+                alertType = .error(message: error.localizedDescription)
                 return false
             }
         }
@@ -70,8 +66,7 @@ extension EditIncomeView {
             do {
                 return try await databaseManager.deleteIncome(income)
             } catch {
-                showError = true
-                errorMessage = error.localizedDescription
+                alertType = .error(message: error.localizedDescription)
                 return false
             }
         }
