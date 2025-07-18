@@ -52,6 +52,7 @@ extension String {
     func toDate(dateFormat: String = DATE_FORMAT) -> Date {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = dateFormat
+        dateFormatter.timeZone = TimeZone.gmt
         return dateFormatter.date(from: self)!
     }
 }

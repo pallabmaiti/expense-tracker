@@ -199,6 +199,7 @@ extension TransactionsView {
                 filteredTransactions = filteredTransactions.filter { transaction in
                     if let income = transaction as? Income {
                         return income.source.rawValue.localizedCaseInsensitiveContains(searchText)
+                        || income.note.localizedCaseInsensitiveContains(searchText)
                     } else if let expense = transaction as? Expense {
                         return expense.name.localizedCaseInsensitiveContains(searchText)
                         || expense.note.localizedCaseInsensitiveContains(searchText)

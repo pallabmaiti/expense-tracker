@@ -36,7 +36,7 @@ struct DateFilterView: View {
     var onSelectDateRange: ((Date, Date) -> Void)
 
     /// Computes the final selected date range based on the selected option.
-    private var selectedDateRange: (Date, Date)? {
+    private var selectedDateRange: (startDate: Date, endDate: Date)? {
         guard let selectedOption else {
             return nil
         }
@@ -93,7 +93,7 @@ struct DateFilterView: View {
                         HStack {
                             Text("Start Date")
                             Spacer()
-                            DatePicker("Start Date", selection: $startDate, displayedComponents: [.date])
+                            DatePicker("Start Date", selection: $startDate, in: ...endDate, displayedComponents: [.date])
                             .labelsHidden()
                         }
                         HStack {
@@ -115,7 +115,9 @@ struct DateFilterView: View {
                     }
                     Button("Apply") {
                         if let selectedDateRange {
-                            onSelectDateRange(selectedDateRange.0, selectedDateRange.1)
+                            var calendar = Calendar.current
+                            calendar.timeZone = .gmt
+                            onSelectDateRange(calendar.startOfDay(for: selectedDateRange.startDate), calendar.startOfDay(for: selectedDateRange.endDate))
                         }
                         dismiss()
                     }

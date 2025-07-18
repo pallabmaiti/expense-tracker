@@ -53,6 +53,7 @@ struct ContentView: View {
                 }
                 .tag(2)
         }
+        //.tabBarMinimizeBehavior(.onScrollDown)
     }
 }
 
@@ -60,4 +61,6 @@ struct ContentView: View {
     ContentView()
         .environmentObject(TabManager())
         .environment(DatabaseManager.initWithInMemory)
+        .environment(\.authenticator, FirebaseAuthenticator())
+        .environment(NotificationManager(center: .init(), settings: NotificationSettingsHandler()))
 }
